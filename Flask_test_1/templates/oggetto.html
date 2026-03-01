@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}{{ item.name }} — Oggetto{% endblock %}
+
+{% block head %}
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='oggetti.css') }}">
+{% endblock %}
+
+{% block content %}
+  <div class="sheetHeader">
+    <h1>{{ item.name }}</h1>
+    <p class="muted">
+      {% if item.equipment_category %}{{ item.equipment_category.name }}{% endif %}
+      {% if item.gear_category %} • {{ item.gear_category.name }}{% endif %}
+    </p>
+
+    <div class="tags">
+      <a class="tag" href="{{ url_for('oggetti') }}">← Torna agli oggetti</a>
+      {% if item.url %}
+        <a class="tag" href="{{ 'https://www.dnd5eapi.co' + item.url }}" target="_blank" rel="noreferrer">Apri API</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="sheet">
+    <section class="sheetCard">
+      <h2>Dettagli</h2>
+
+      <div class="row">
+        <div class="k">Categoria</div>
+        <div class="v">{{ item.equipment_category.name if item.equipment_category else "—" }}</div>
+      </div>
+
+      <div class="row">
+        <div class="k">Costo</div>
+        <div class="v">
+          {% if item.cost %}{{ item.cost.quantity }} {{ item.cost.unit }}{% else %}—{% endif %}
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="k">Peso</div>
+        <div class="v">{{ item.weight if item.weight is not none else "—" }}</div>
+      </div>
+
+      {% if item.damage %}
+        <div class="row">
+          <div class="k">Danno</div>
+          <div class="v">{{ item.damage.damage_dice }} {{ item.damage.damage_type.name }}</div>
+        </div>
+      {% endif %}
+
+      {% if item.properties %}
+        <div class="splitline"></div>
+        <h2>Proprietà</h2>
+        <div class="tags">
+          {% for p in item.properties %}
+            <span class="tag">{{ p.name }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% if item.desc %}
+        <div class="splitline"></div>
+        <h2>Descrizione</h2>
+        <div class="desc">
+          {% for line in item.desc %}
+            {{ line }}<br>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </section>
+
+    <aside class="sheetCard">
+      <h2>Immagine</h2>
+      {% if item.image_full %}
+        <img class="monster-img" src="{{ item.image_full }}" alt="{{ item.name }}">
+      {% else %}
+        <p class="muted">Nessuna immagine disponibile.</p>
+      {% endif %}
+    </aside>
+  </div>
+{% endblock %}

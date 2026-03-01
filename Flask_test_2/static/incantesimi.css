@@ -1,0 +1,183 @@
+/* ===============================
+   TEMA MAGICO / ARCANO
+================================ */
+
+body{
+  background:
+    radial-gradient(1200px 700px at 20% -10%, rgba(168, 85, 247, .35) 0%, transparent 55%),
+    radial-gradient(900px 600px at 90% 10%, rgba(59, 130, 246, .30) 0%, transparent 55%),
+    radial-gradient(800px 500px at 50% 120%, rgba(34, 211, 238, .18) 0%, transparent 55%),
+    #070712;
+  color: #efe7ff;
+}
+
+/* Titoli stile grimorio */
+.page-title{
+  text-align:center;
+  font-family: "Uncial Antiqua", "Cinzel", serif;
+  font-size: 38px;
+  letter-spacing: .6px;
+  margin: 10px 0 6px;
+  color: #f5d0fe;
+  text-shadow: 0 0 18px rgba(168,85,247,.35);
+}
+
+.muted{
+  color: rgba(229, 231, 235, .72);
+}
+
+/* Barra filtri: più leggibile */
+.spell-controls{
+  border: 1px solid rgba(168,85,247,.35);
+  background: rgba(12, 10, 24, .55);
+  box-shadow: 0 12px 40px rgba(0,0,0,.35);
+}
+
+.spell-controls input,
+.spell-controls select{
+  background: rgba(10, 8, 18, .7);
+  border: 1px solid rgba(168,85,247,.35);
+  color: #efe7ff;
+}
+
+.spell-controls input::placeholder{
+  color: rgba(245, 208, 254, .65);
+}
+
+.spell-controls button,
+.btn-link{
+  background: linear-gradient(145deg, rgba(168,85,247,.25), rgba(59,130,246,.18));
+  border: 1px solid rgba(245, 208, 254, .35);
+  color: #f5d0fe;
+  font-weight: 900;
+}
+
+.spell-controls button:hover,
+.btn-link:hover{
+  background: linear-gradient(145deg, rgba(245, 208, 254, .95), rgba(34, 211, 238, .65));
+  color: #0b1020;
+  text-decoration: none;
+}
+
+/* Grid / cards */
+.spell-grid{
+  gap: 14px;
+}
+
+.spell-card{
+  border: 1px solid rgba(168,85,247,.28);
+  background: rgba(12, 10, 24, .55);
+  box-shadow: 0 10px 30px rgba(0,0,0,.30);
+  position: relative;
+  overflow: hidden;
+}
+
+.spell-card::before{
+  content:"";
+  position:absolute;
+  inset:-40%;
+  background: radial-gradient(circle, rgba(245,208,254,.18), transparent 55%);
+  transform: rotate(12deg);
+  opacity: .9;
+  pointer-events: none;
+}
+
+.spell-card:hover{
+  transform: translateY(-2px);
+  background: rgba(12, 10, 24, .70);
+}
+
+/* Nome incantesimo */
+.spell-name{
+  font-family: "Cinzel", serif;
+  letter-spacing: .25px;
+  color: #f5d0fe;
+  text-shadow: 0 0 14px rgba(168,85,247,.25);
+}
+
+.spell-meta{
+  color: rgba(229,231,235,.7);
+}
+
+/* Tag */
+.spell-tag{
+  border: 1px solid rgba(34,211,238,.30);
+  background: rgba(34,211,238,.10);
+  color: #c7d2fe;
+}
+
+.spell-tag:hover{
+  background: rgba(245,208,254,.92);
+  border-color: rgba(245,208,254,.92);
+  color: #0b1020;
+}
+
+.spell-tag.disabled{
+  opacity: .55;
+}
+
+/* Header dettaglio */
+.spell-header{
+  border: 1px solid rgba(168,85,247,.28);
+  background: rgba(12, 10, 24, .60);
+}
+
+.spell-title{
+  font-family: "Uncial Antiqua", "Cinzel", serif;
+  color: #f5d0fe;
+  text-shadow: 0 0 22px rgba(168,85,247,.35);
+}
+
+.spell-sub{
+  color: rgba(229,231,235,.75);
+}
+
+/* Scheda incantesimo */
+.spell-sheet .sheetCard{
+  border: 1px solid rgba(168,85,247,.28);
+  background: rgba(12, 10, 24, .55);
+}
+
+.spell-cardbig h2,
+.spell-side h2{
+  color: #f5d0fe;
+  letter-spacing: .25px;
+  text-shadow: 0 0 12px rgba(168,85,247,.25);
+}
+
+.desc{
+  line-height: 1.65;
+}
+
+/* Righe dettagli */
+.row{
+  border-top: 1px solid rgba(168,85,247,.18);
+}
+.k{
+  color: rgba(245,208,254,.85);
+  font-weight: 800;
+}
+
+/* Splitline arcana */
+.splitline{
+  background: linear-gradient(90deg, transparent, rgba(245,208,254,.8), transparent);
+  height: 1px;
+}
+
+/* Navbar: leggermente “arcana” senza rompere la tua base */
+.navbar{
+  background: rgba(8, 7, 18, .92);
+  border-bottom: 1px solid rgba(168,85,247,.30);
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+
+.nav-button{
+  background: linear-gradient(145deg, rgba(168,85,247,.18), rgba(59,130,246,.12));
+  border: 1px solid rgba(245, 208, 254, .30);
+  color: #f5d0fe;
+}
+
+.nav-button:hover{
+  background: rgba(245,208,254,.92);
+  color: #0b1020;
+}

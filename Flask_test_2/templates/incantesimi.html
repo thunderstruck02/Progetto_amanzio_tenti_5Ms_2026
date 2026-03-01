@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Incantesimi — D&D 5e{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='incantesimi.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Uncial+Antiqua&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+  <h1 class="page-title">🪄 Grimorio degli Incantesimi</h1>
+  <p class="muted">Risultati: {{ total }} | Pagina {{ page }} / {{ total_pages }}</p>
+
+  <form class="controls spell-controls" method="get" action="{{ url_for('incantesimi') }}">
+    <input name="q" placeholder="Cerca per nome..." value="{{ q or '' }}">
+
+    <select name="level">
+      <option value="">Livello (tutti)</option>
+      {% for l in level_options %}
+        <option value="{{ l }}" {% if level == l %}selected{% endif %}>
+          {% if l == "0" %}Trucchetto{% else %}Livello {{ l }}{% endif %}
+        </option>
+      {% endfor %}
+    </select>
+
+    <select name="school">
+      <option value="">Scuola (tutte)</option>
+      {% for s in school_options %}
+        <option value="{{ s }}" {% if school == s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="ritual">
+      <option value="">Rituale?</option>
+      <option value="yes" {% if ritual=="yes" %}selected{% endif %}>Sì</option>
+      <option value="no" {% if ritual=="no" %}selected{% endif %}>No</option>
+    </select>
+
+    <select name="concentration">
+      <option value="">Concentrazione?</option>
+      <option value="yes" {% if concentration=="yes" %}selected{% endif %}>Sì</option>
+      <option value="no" {% if concentration=="no" %}selected{% endif %}>No</option>
+    </select>
+
+    <select name="comp">
+      <option value="">Componenti</option>
+      {% for c in comp_options %}
+        <option value="{{ c }}" {% if comp==c %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="per_page">
+      {% for n in [12,24,48] %}
+        <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>{{ n }} / pagina</option>
+      {% endfor %}
+    </select>
+
+    <button type="submit">Applica</button>
+    <a class="btn-link" href="{{ url_for('incantesimi') }}">Reset</a>
+  </form>
+
+  <section class="grid spell-grid">
+    {% for base, detail in items %}
+      {% set lvl = detail.level if detail else None %}
+      {% set sch = detail.school.name if detail and detail.school else None %}
+      <article class="card spell-card">
+        <h3 class="spell-name">{{ detail.name if detail else base.name }}</h3>
+
+        <div class="muted spell-meta">
+          {% if detail %}
+            {% if lvl == 0 %}Trucchetto{% else %}Lv {{ lvl }}{% endif %}
+            {% if sch %} • {{ sch }}{% endif %}
+            {% if detail.ritual %} • Rituale{% endif %}
+            {% if detail.concentration %} • Concentrazione{% endif %}
+          {% else %}
+            Index: {{ base.index }}
+          {% endif %}
+        </div>
+
+        <div class="tags">
+          <a class="tag spell-tag" href="{{ url_for('incantesimo', index=base.index) }}">Apri scheda</a>
+          <a class="tag spell-tag" href="{{ 'https://www.dnd5eapi.co' + base.url }}" target="_blank" rel="noreferrer">API</a>
+        </div>
+      </article>
+    {% endfor %}
+  </section>
+
+  <div class="footerbar">
+    <div class="muted">
+      {% set start = (page-1)*per_page + 1 %}
+      {% set end = (page-1)*per_page + items|length %}
+      {% if total > 0 %}
+        Mostrati {{ start }}–{{ end }} su {{ total }}
+      {% else %}
+        Nessun incantesimo trovato.
+      {% endif %}
+    </div>
+
+    <div class="pager">
+      {% if page > 1 %}
+        <a class="tag spell-tag" href="{{ url_for('incantesimi', q=q, level=level, school=school, ritual=ritual, concentration=concentration, comp=comp, per_page=per_page, page=page-1) }}">← Prev</a>
+      {% else %}
+        <span class="tag spell-tag disabled">← Prev</span>
+      {% endif %}
+
+      <span class="tag spell-tag">Page {{ page }} / {{ total_pages }}</span>
+
+      {% if page < total_pages %}
+        <a class="tag spell-tag" href="{{ url_for('incantesimi', q=q, level=level, school=school, ritual=ritual, concentration=concentration, comp=comp, per_page=per_page, page=page+1) }}">Next →</a>
+      {% else %}
+        <span class="tag spell-tag disabled">Next →</span>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

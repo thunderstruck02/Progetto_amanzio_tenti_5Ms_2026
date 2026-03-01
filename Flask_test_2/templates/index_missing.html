@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — Indice mancante{% endblock %}
+{% block content %}
+  <h1 class="page-title">{{ title }}</h1>
+  <div class="error">
+    <p><strong>Indice locale non trovato.</strong></p>
+    <p>Apri una volta questa pagina per generarlo:</p>
+    <p><code>{{ admin_url }}</code></p>
+    <p>Poi ricarica la pagina.</p>
+  </div>
+{% endblock %}

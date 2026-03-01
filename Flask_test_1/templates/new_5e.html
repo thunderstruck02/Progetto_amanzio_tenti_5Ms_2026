@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>D&D 5e — Novità e cambiamenti rispetto alle edizioni precedenti</title>
+
+  <!-- Font "da libro" -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Uncial+Antiqua&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='new_5e.css') }}" />
+</head>
+
+<body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="sigil">✦</div>
+        <div>
+          <div class="brand-title">Dungeons & Dragons</div>
+          <div class="brand-sub">Nuove aggiunte della 5ª Edizione</div>
+        </div>
+      </div>
+
+      <!-- NAVIGAZIONE PRINCIPALE -->
+      <nav class="nav main-nav">
+          <a href="{{ url_for('home') }}"><button class="nav-btn">🏠 Home</button></a>
+          <a href="{{ url_for('mostri') }}"><button class="nav-btn">👹 Mostri</button></a>
+          <a href="{{ url_for('oggetti') }}"><button class="nav-btn">🗡️ Oggetti</button></a>
+          <a href="{{ url_for('incantesimi') }}"><button class="nav-btn">🪄 Incantesimi</button></a>
+          <a href="{{ url_for('new_5e') }}"><button class="nav-btn">📜 Nuove aggiunte 5e</button></a>
+      </nav>
+    </header>
+
+  <main class="wrap">
+    <section class="hero" id="overview">
+      <h1>📜 Le novità della 5e (rispetto alle edizioni precedenti)</h1>
+      <p class="lead">
+        La 5e punta a un regolamento più “snello” e modulare: meno bonus numerici che esplodono con il livello,
+        meccaniche unificate e più spazio alle scelte narrative. Questo si vede soprattutto in:
+        <span class="pill">bounded accuracy</span>, <span class="pill">vantaggio/svantaggio</span>,
+        <span class="pill">bonus di competenza</span>, <span class="pill">concentrazione</span>,
+        <span class="pill">background</span>, <span class="pill">riposi + dadi vita</span>.
+      </p>
+
+      <div class="callouts">
+        <div class="callout">
+          <div class="callout-title">Obiettivo pratico</div>
+          <div class="callout-text">Ridurre calcoli e “stack” di bonus, rendendo il gioco più fluido al tavolo.</div>
+        </div>
+        <div class="callout">
+          <div class="callout-title">Compatibilità “classica”</div>
+          <div class="callout-text">Ritorno a elementi storici (slot incantesimi, componenti), ma con limiti moderni (concentrazione).</div>
+        </div>
+        <div class="callout">
+          <div class="callout-title">Scalabilità</div>
+          <div class="callout-text">Progressione numerica più lenta: creature “più deboli” restano rilevanti più a lungo.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CORE -->
+    <section class="section" id="core">
+      <h2>⚙️ Core rules: cosa cambia davvero</h2>
+
+      <article class="card">
+        <h3>1) Vantaggio / Svantaggio</h3>
+        <p>
+          Invece di una lista infinita di modificatori (+2, +4, -1, ecc.), molte situazioni si risolvono con
+          <strong>vantaggio</strong> o <strong>svantaggio</strong>: tiri 2d20 e prendi il migliore o il peggiore.
+          Se hai entrambi, <strong>si annullano</strong> e tiri 1d20.
+        </p>
+        <div class="note">
+          Perché è una “novità”: riduce micro-calcoli e rende immediata la lettura della scena.
+        </div>
+      </article>
+
+      <article class="card">
+        <h3>2) Bonus di competenza (Proficiency Bonus)</h3>
+        <p>
+          La 5e usa un <strong>unico bonus di competenza</strong> che cresce lentamente col livello e si applica
+          a tiri in cui sei competente (abilità, tiri per colpire, TS, strumenti, ecc.).
+          È anche una base del principio chiamato <strong>bounded accuracy</strong>.
+        </p>
+        <div class="note">
+          Rispetto a molte edizioni precedenti: meno “numeri giganti” e meno bonus diversi da sommare.
+        </div>
+      </article>
+
+      <article class="card">
+        <h3>3) Bounded accuracy</h3>
+        <p>
+          Principio di design: limitare quanto crescono i bonus ai d20. In pratica, la progressione è più contenuta,
+          così una CA “normale” o un nemico “basso livello” non diventano subito inutili.
+        </p>
+        <div class="note">
+          Effetto pratico: più varietà di encounter e meno “solo matematiche” per bilanciare.
+        </div>
+      </article>
+
+      <article class="card">
+        <h3>4) Tiri salvezza su 6 caratteristiche</h3>
+        <p>
+          In 5e i tiri salvezza sono legati direttamente alle <strong>6 caratteristiche</strong>
+          (For, Des, Cos, Int, Sag, Car), e la competenza ai TS dipende dalla classe.
+          È un cambio netto rispetto a sistemi “Fortitudine/Riflessi/Volontà” (più tipici in 3.x/4e).
+        </p>
+        <div class="note">
+          Impatto: più variabilità e differenze tra classi, ma anche più attenzione a quali TS “copri”.
+        </div>
+      </article>
+    </section>
+
+    <!-- CHARACTERS -->
+    <section class="section" id="characters">
+      <h2>🧑‍🎲 Personaggi: background e identità</h2>
+
+      <article class="card">
+        <h3>5) Background “forti” (abilità + strumenti + tratto narrativo)</h3>
+        <p>
+          La 5e dà molta importanza al <strong>Background</strong>: oltre a competenze e strumenti,
+          ti suggerisce una struttura narrativa (tratti, ideali, legami, difetti) per rendere il personaggio giocabile
+          anche fuori dal combattimento.
+        </p>
+        <div class="note">
+          Non è “solo roleplay”: influenza scelte di competenza e interazioni sociali.
+        </div>
+      </article>
+
+      <article class="card">
+        <h3>6) Competenza con strumenti (Tools) più presente</h3>
+        <p>
+          La 5e rende più centrale la competenza in strumenti (thieves’ tools, kit, strumenti musicali, ecc.),
+          spesso collegandola proprio ai background.
+        </p>
+        <div class="note">
+          Questo spinge il gioco “ad avventura” (esplorazione, crafting, soluzioni creative).
+        </div>
+      </article>
+    </section>
+
+    <!-- MAGIC -->
+    <section class="section" id="magic">
+      <h2>🔮 Magia: limitare lo “stack” e semplificare il tavolo</h2>
+
+      <article class="card">
+        <h3>7) Concentrazione (no buff-stack infinito)</h3>
+        <p>
+          Molti incantesimi potenti richiedono <strong>concentrazione</strong>. In 5e, in generale,
+          puoi mantenere <strong>un solo effetto di concentrazione alla volta</strong>,
+          e puoi perderlo (ad esempio subendo danni o diventando incapacitato).
+        </p>
+        <div class="note">
+          Impatto: meno “super-soldato” con 6 buff attivi e combattimenti più gestibili.
+        </div>
+      </article>
+
+      <article class="card">
+        <h3>8) Rituali e componenti (ritorno “classico” più leggibile)</h3>
+        <p>
+          La 5e conserva componenti verbali/somatiche/materiali e supporta incantesimi lanciabili come rituale
+          (quando previsto). L’idea è mantenere sapore “old school” senza complicare troppo.
+        </p>
+      </article>
+    </section>
+
+    <!-- RESTS -->
+    <section class="section" id="rests">
+      <h2>🛌 Riposi: short/long rest + dadi vita</h2>
+
+      <article class="card">
+        <h3>9) Dadi Vita (Hit Dice) e recupero</h3>
+        <p>
+          La 5e introduce/centralizza i <strong>dadi vita</strong>: durante un <strong>riposo breve</strong> puoi spendere dadi vita per curarti.
+          Dopo un <strong>riposo lungo</strong> recuperi PF e anche una parte dei dadi vita (tipicamente metà del totale).
+        </p>
+        <div class="note">
+          Effetto: gestione risorse più “a giornata” e decisioni su quanto rischiare tra un riposo e l’altro.
+        </div>
+      </article>
+
+      <article class="card">
+        <h3>10) Short Rest vs Long Rest come “timer” di risorse</h3>
+        <p>
+          Molte capacità si ricaricano al riposo breve o lungo: la struttura spinge la party a ragionare su ritmo dell’avventura.
+          È anche un punto che differenzia fortemente classi “short-rest based” e “long-rest based”.
+        </p>
+      </article>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section" id="faq">
+      <h2>❓ FAQ rapida (utile per il progetto)</h2>
+
+      <div class="faq">
+        <details>
+          <summary>Perché la 5e è considerata più semplice?</summary>
+          <p>
+            Perché molte situazioni usano meccaniche unificate (vantaggio/svantaggio, bonus competenza) e numeri più contenuti (bounded accuracy).
+          </p>
+        </details>
+
+        <details>
+          <summary>Qual è la differenza più “visibile” rispetto alla 4e?</summary>
+          <p>
+            La 5e torna a una struttura più “classica” (slot, componenti), ma aggiunge vincoli moderni (concentrazione) e un modello di riposi
+            che regola risorse e ritmo.
+          </p>
+        </details>
+
+        <details>
+          <summary>Qual è la differenza più “matematica” rispetto alla 3.x?</summary>
+          <p>
+            La progressione numerica è più contenuta: bonus più piccoli, meno stacking, più centralità della competenza.
+          </p>
+        </details>
+      </div>
+    </section>
+
+    <!-- SOURCES -->
+    <section class="section" id="sources">
+      <h2>📚 Fonti (letture consigliate)</h2>
+      <div class="card">
+        <ul class="sources">
+          <li>
+            <a href="https://www.dndbeyond.com/sources/dnd/basic-rules-2014" target="_blank" rel="noreferrer">
+              D&amp;D Basic Rules (2014) — capitoli su Advantage/Disadvantage, Proficiency Bonus, Spellcasting
+            </a>
+          </li>
+          <li>
+            <a href="https://www.dndbeyond.com/sources/dnd/basic-rules-2014/spellcasting" target="_blank" rel="noreferrer">
+              D&amp;D Basic Rules — Spellcasting (Concentration)
+            </a>
+          </li>
+          <li>
+            <a href="https://roll20.net/compendium/dnd5e/Resting" target="_blank" rel="noreferrer">
+              Roll20 Compendium — Resting (Short Rest / Long Rest, Hit Dice)
+            </a>
+          </li>
+          <li>
+            <a href="https://dmdavid.com/tag/proficiency-and-bounded-accuracy-in-dd-next/" target="_blank" rel="noreferrer">
+              DM David — Proficiency e Bounded Accuracy (contesto di design)
+            </a>
+          </li>
+          <li>
+            <a href="https://www.dndbeyond.com/sources/dnd/basic-rules-2014/personality-and-background" target="_blank" rel="noreferrer">
+              D&amp;D Basic Rules — Personality &amp; Background (tratti/ideali/legami/difetti)
+            </a>
+          </li>
+        </ul>
+        <p class="muted small">
+          Nota: questa pagina è una sintesi didattica. Se vuoi, puoi aggiungere esempi pratici (prima/dopo) per ogni punto.
+        </p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="muted small">
+        Pagina statica HTML + CSS — stile “libro antico”. Nessun JS richiesto.
+      </div>
+    </footer>
+  </main>
+</body>
+</html>

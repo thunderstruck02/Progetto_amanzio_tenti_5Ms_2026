@@ -1,0 +1,265 @@
+:root{
+  --paper: #f6efdf;
+  --paper-dark: #efe3c8;
+  --ink: #3a2f25;
+  --muted: #6b5b4f;
+  --gold-soft: #c9a85d;
+  --accent: #7a5c3e;
+  --sage: #7f9c8c;
+  --edge: #d7c3a0;
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  font-family: "Cinzel", serif;
+  color: var(--ink);
+  background: linear-gradient(180deg, #ece3cf, #e6d8be);
+}
+
+/* ===== Topbar più morbida ===== */
+
+.topbar{
+  padding: 16px 20px;
+  background: #f1e5cc;
+  border-bottom: 1px solid var(--edge);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:12px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.sigil{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius: 8px;
+  background: #e8dcc2;
+  border: 1px solid var(--edge);
+  color: var(--accent);
+  font-size: 16px;
+}
+
+.brand-title{
+  font-weight:700;
+  color: var(--accent);
+}
+
+.brand-sub{
+  font-size:12px;
+  color: var(--muted);
+}
+
+.nav{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.nav-btn{
+  text-decoration:none;
+  font-size:13px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--edge);
+  background: #f6efdf;
+  color: var(--ink);
+  transition:.2s ease;
+}
+
+.nav-btn:hover{
+  background: var(--paper-dark);
+}
+
+/* ===== Pagina centrale ===== */
+
+.wrap{
+  max-width: 1000px;
+  margin: 28px auto 50px;
+  padding: 28px;
+  background: var(--paper);
+  border-radius: 18px;
+  border: 1px solid var(--edge);
+}
+
+/* ===== Hero ===== */
+
+.hero h1{
+  margin: 0 0 12px;
+  font-family: "Uncial Antiqua", serif;
+  font-size: 32px;
+  color: var(--accent);
+}
+
+.lead{
+  line-height:1.7;
+}
+
+.pill{
+  display:inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  margin: 4px 4px 0 0;
+  background: #efe3c8;
+  border: 1px solid var(--edge);
+  color: var(--accent);
+}
+
+/* ===== Sezioni ===== */
+
+.section{
+  margin-top: 30px;
+  padding-top: 16px;
+  border-top: 1px solid var(--edge);
+}
+
+.section h2{
+  margin: 0 0 12px;
+  font-family: "Uncial Antiqua", serif;
+  font-size: 24px;
+  color: var(--accent);
+}
+
+/* ===== Card ===== */
+
+.card{
+  background: #f9f4e8;
+  border: 1px solid var(--edge);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-top: 14px;
+  transition: .15s ease;
+}
+
+.card:hover{
+  background: #f3ead6;
+}
+
+.card h3{
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: var(--ink);
+}
+
+.card p{
+  margin:0 0 10px;
+  line-height:1.7;
+}
+
+.note{
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #ece6d6;
+  border-left: 4px solid var(--sage);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ===== Callouts ===== */
+
+.callouts{
+  margin-top: 16px;
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:12px;
+}
+
+@media (max-width: 900px){
+  .callouts{ grid-template-columns: 1fr; }
+}
+
+.callout{
+  background: #f9f4e8;
+  border: 1px solid var(--edge);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.callout-title{
+  font-weight:700;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+/* ===== FAQ ===== */
+
+.faq details{
+  margin-top: 10px;
+  background: #f9f4e8;
+  border: 1px solid var(--edge);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.faq summary{
+  cursor:pointer;
+  font-weight:700;
+  color: var(--ink);
+}
+
+.sources{
+  padding-left:18px;
+  line-height:1.6;
+}
+
+a{
+  color: #6b4f2b;
+}
+
+a:hover{
+  color: var(--accent);
+}
+
+.footer{
+  margin-top: 30px;
+  padding-top: 16px;
+  border-top: 1px solid var(--edge);
+}
+
+.muted{
+  color: var(--muted);
+}
+
+.small{
+  font-size:12px;
+}
+
+
+/* ===== NAVIGAZIONE PRINCIPALE ===== */
+
+.main-nav {
+  margin-top: 8px;
+  gap: 10px;
+}
+
+.nav-btn {
+  font-family: "Cinzel", serif;
+  font-size: 14px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--edge);
+  background: #f9f4e8;
+  color: var(--ink);
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.nav-btn:hover {
+  background: var(--paper-dark);
+}
+
+.nav-btn.active {
+  background: var(--gold-soft);
+  color: white;
+  border-color: var(--gold-soft);
+}

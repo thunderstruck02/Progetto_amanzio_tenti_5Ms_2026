@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Mostri — D&D 5e{% endblock %}
+
+{% block content %}
+  <h1 class="page-title">Mostri</h1>
+  <p class="muted">Risultati: {{ total }} | Pagina {{ page }} / {{ total_pages }}</p>
+
+  <!-- Form filtri: SENZA JS -->
+  <form class="controls" method="get" action="{{ url_for('mostri') }}">
+    <input name="q" placeholder="Cerca per nome..." value="{{ q or '' }}">
+
+    <select name="type">
+      <option value="">Tipo (tutti)</option>
+      {% for t in type_options %}
+        <option value="{{ t }}" {% if f_type == t %}selected{% endif %}>{{ t }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="size">
+      <option value="">Taglia (tutte)</option>
+      {% for s in size_options %}
+        <option value="{{ s }}" {% if f_size == s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="cr">
+      <option value="">CR (tutti)</option>
+      {% for c in cr_options %}
+        <option value="{{ c }}" {% if f_cr == c %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="per_page">
+      {% for n in [12,24,48] %}
+        <option value="{{ n }}" {% if per_page == n %}selected{% endif %}>{{ n }} / pagina</option>
+      {% endfor %}
+    </select>
+
+    <button type="submit">Applica</button>
+    <a class="btn-link" href="{{ url_for('mostri') }}">Reset</a>
+  </form>
+
+  <section class="grid">
+    {% for base, detail in items %}
+      <article class="card">
+        <h3>{{ base.name }}</h3>
+
+        {% if detail %}
+          <div class="muted">{{ detail.size }} {{ detail.type }} • CR {{ detail.challenge_rating }}</div>
+        {% else %}
+          <div class="muted">Index: {{ base.index }}</div>
+        {% endif %}
+
+        <div class="tags">
+          <a class="tag" href="{{ url_for('mostro', index=base.index) }}">Apri scheda</a>
+          <a class="tag" href="{{ 'https://www.dnd5eapi.co' + base.url }}" target="_blank" rel="noreferrer">API</a>
+        </div>
+      </article>
+    {% endfor %}
+  </section>
+
+  <div class="footerbar">
+    <div class="muted">
+      {% set start = (page-1)*per_page + 1 %}
+      {% set end = (page-1)*per_page + items|length %}
+      {% if total > 0 %}
+        Mostrati {{ start }}–{{ end }} su {{ total }}
+      {% else %}
+        Nessun risultato.
+      {% endif %}
+    </div>
+
+    <div class="pager">
+      {% if page > 1 %}
+        <a class="tag" href="{{ url_for('mostri', q=q, type=f_type, size=f_size, cr=f_cr, per_page=per_page, page=page-1) }}">← Prev</a>
+      {% else %}
+        <span class="tag disabled">← Prev</span>
+      {% endif %}
+
+      <span class="tag">Page {{ page }} / {{ total_pages }}</span>
+
+      {% if page < total_pages %}
+        <a class="tag" href="{{ url_for('mostri', q=q, type=f_type, size=f_size, cr=f_cr, per_page=per_page, page=page+1) }}">Next →</a>
+      {% else %}
+        <span class="tag disabled">Next →</span>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

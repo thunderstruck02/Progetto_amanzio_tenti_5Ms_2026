@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}{{ monster.name }} — Mostro{% endblock %}
+
+{% block content %}
+  <div class="sheetHeader">
+    <h1>{{ monster.name }}</h1>
+    <p class="muted">{{ monster.size }} {{ monster.type }}, {{ monster.alignment }}</p>
+    <div class="tags">
+      <a class="tag" href="{{ url_for('mostri') }}">← Torna ai mostri</a>
+      <a class="tag" href="{{ 'https://www.dnd5eapi.co' + monster.url }}" target="_blank" rel="noreferrer">Apri API</a>
+    </div>
+  </div>
+
+  <div class="sheet">
+    <section class="sheetCard">
+      <h2>Statistiche</h2>
+      <div class="row"><div class="k">CA</div><div class="v">
+        {% if monster.armor_class %}{% for ac in monster.armor_class %}{{ ac.value }} ({{ ac.type }}){% if not loop.last %}, {% endif %}{% endfor %}{% else %}—{% endif %}
+      </div></div>
+
+      <div class="row"><div class="k">PF</div><div class="v">{{ monster.hit_points }} ({{ monster.hit_points_roll }})</div></div>
+      <div class="row"><div class="k">Velocità</div><div class="v">
+        {% for k,v in monster.speed.items() %}{{ k }}: {{ v }}{% if not loop.last %} • {% endif %}{% endfor %}
+      </div></div>
+
+      <div class="splitline"></div>
+
+      <div class="statgrid">
+        {% for abbr, val in [("STR",monster.strength),("DEX",monster.dexterity),("CON",monster.constitution),("INT",monster.intelligence),("WIS",monster.wisdom),("CHA",monster.charisma)] %}
+          {% set m = ability_mod(val) %}
+          <div class="stat">
+            <div class="k">{{ abbr }}</div>
+            <div class="v">{{ val }}</div>
+            <div class="m">{% if m>=0 %}+{% endif %}{{ m }}</div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="splitline"></div>
+
+      <h2>Azioni</h2>
+      {% if monster.actions %}
+        {% for a in monster.actions %}
+          <details>
+            <summary><span>{{ a.name }}</span><span class="muted">{% if a.attack_bonus is defined %}+{{ a.attack_bonus }} to hit{% endif %}</span></summary>
+            <div class="desc">{{ a.desc|replace("\n","<br>")|safe }}</div>
+          </details>
+        {% endfor %}
+      {% else %}
+        <p class="muted">—</p>
+      {% endif %}
+
+      <div class="splitline"></div>
+
+      <h2>Tratti speciali</h2>
+      {% if monster.special_abilities %}
+        {% for s in monster.special_abilities %}
+          <details>
+            <summary><span>{{ s.name }}</span></summary>
+            <div class="desc">{{ s.desc|replace("\n","<br>")|safe }}</div>
+          </details>
+        {% endfor %}
+      {% else %}
+        <p class="muted">—</p>
+      {% endif %}
+    </section>
+
+    <aside class="sheetCard">
+      <h2>Info</h2>
+      <div class="row"><div class="k">CR</div><div class="v">{{ monster.challenge_rating }}</div></div>
+      <div class="row"><div class="k">XP</div><div class="v">{{ monster.xp }}</div></div>
+      <div class="row"><div class="k">Sensi</div><div class="v">
+        {% if monster.senses %}{% for k,v in monster.senses.items() %}{{ k }}: {{ v }}{% if not loop.last %} • {% endif %}{% endfor %}{% else %}—{% endif %}
+      </div></div>
+      <div class="row"><div class="k">Linguaggi</div><div class="v">{{ monster.languages or "—" }}</div></div>
+
+      <div class="splitline"></div>
+
+      <h2>Immagine</h2>
+      {% if monster.image_full %}
+        <img class="monster-img" src="{{ monster.image_full }}" alt="{{ monster.name }}">
+      {% else %}
+        <p class="muted">Nessuna immagine disponibile.</p>
+      {% endif %}
+    </aside>
+  </div>
+{% endblock %}

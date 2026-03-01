@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>D&D 5e — Mostri</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#111826;
+      --panel2:#0f172a;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --line:#233047;
+      --accent:#7dd3fc;
+      --chip:#172554;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 700px at 20% -10%, #1d4ed8 0%, transparent 55%),
+                  radial-gradient(900px 600px at 90% 10%, #0ea5e9 0%, transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      line-height:1.45;
+    }
+    a{ color: var(--accent); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    .wrap{ max-width:1200px; margin:0 auto; padding:24px; }
+
+    header{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px 18px;
+      background: linear-gradient(180deg, rgba(17,24,38,.95), rgba(15,23,42,.85));
+      backdrop-filter: blur(6px);
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+    header h1{ margin:0; font-size:30px; letter-spacing:.2px; }
+    header .sub{ color:var(--muted); margin-top:6px; }
+    .rightmeta{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+      color:var(--muted); font-size:13px;
+    }
+    .pill{
+      font-size:12px; padding:6px 10px; border-radius:999px;
+      background: rgba(125,211,252,.12);
+      border:1px solid rgba(125,211,252,.25);
+      color:#dbeafe;
+      white-space:nowrap;
+    }
+
+    /* Controls */
+    .controls{
+      margin-top:14px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background: rgba(15,23,42,.85);
+      padding:14px;
+      display:grid;
+      grid-template-columns: 1.2fr 1fr 1fr 1fr auto;
+      gap:10px;
+      align-items:center;
+    }
+    @media (max-width: 980px){
+      .controls{ grid-template-columns: 1fr 1fr; }
+      .controls .wide{ grid-column: 1 / -1; }
+    }
+    input, select{
+      width:100%;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(17,24,38,.55);
+      color:var(--text);
+      outline:none;
+    }
+    input::placeholder{ color: rgba(156,163,175,.8); }
+    button{
+      cursor:pointer;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(125,211,252,.10);
+      color: var(--text);
+      padding:10px 12px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+    button:hover{ background: rgba(125,211,252,.16); }
+
+    /* Grid */
+    .grid{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:12px;
+    }
+    @media (max-width: 1100px){ .grid{ grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 820px){ .grid{ grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 520px){ .grid{ grid-template-columns: 1fr; } }
+
+    .card{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background: rgba(15,23,42,.85);
+      padding:14px;
+      transition: transform .08s ease, background .08s ease;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height: 140px;
+    }
+    .card:hover{
+      transform: translateY(-2px);
+      background: rgba(17,24,38,.92);
+    }
+    .card h3{ margin:0; font-size:16px; letter-spacing:.15px; }
+    .muted{ color:var(--muted); font-size:12px; }
+    .tags{ display:flex; flex-wrap:wrap; gap:8px; margin-top:auto; }
+    .tag{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:12px;
+      background: rgba(23,37,84,.55);
+      border:1px solid rgba(35,48,71,.9);
+      color:#dbeafe;
+    }
+
+    /* Pagination */
+    .footerbar{
+      margin-top:14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      color:var(--muted);
+    }
+    .pager{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+
+    /* Modal */
+    .modalBackdrop{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.65);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:1000;
+    }
+    .modal{
+      width:min(1100px, 100%);
+      max-height: 92vh;
+      overflow:auto;
+      border-radius:18px;
+      border:1px solid var(--line);
+      background: rgba(15,23,42,.97);
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    }
+    .modalHead{
+      position:sticky; top:0;
+      background: rgba(15,23,42,.98);
+      border-bottom:1px solid rgba(35,48,71,.65);
+      padding:12px 14px;
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+    }
+    .modalHead b{ font-size:14px; }
+    .closeBtn{ padding:8px 10px; border-radius:12px; }
+
+    /* Monster sheet inside modal (stile analogo) */
+    .sheet{
+      padding:14px;
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:14px;
+    }
+    @media (max-width: 900px){ .sheet{ grid-template-columns:1fr; } }
+
+    .sheetCard{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background: rgba(17,24,38,.55);
+      padding:14px;
+    }
+    .sheetCard h2{ margin:0 0 10px; font-size:18px; }
+
+    .row{ display:flex; justify-content:space-between; gap:10px; padding:10px 0; border-top:1px solid rgba(35,48,71,.65); }
+    .row:first-child{ border-top:none; padding-top:0; }
+    .row .k{ color:var(--muted); }
+    .row .v{ text-align:right; }
+
+    .statgrid{ display:grid; grid-template-columns: repeat(6, 1fr); gap:10px; }
+    @media (max-width: 900px){ .statgrid{ grid-template-columns: repeat(3, 1fr); } }
+    .stat{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:10px;
+      background: rgba(15,23,42,.6);
+      text-align:center;
+    }
+    .stat .k{ color:var(--muted); font-size:12px; letter-spacing:.6px; }
+    .stat .v{ font-size:18px; font-weight:800; margin-top:4px; }
+    .stat .m{ color:var(--muted); font-size:12px; margin-top:2px; }
+
+    details{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:10px 12px;
+      background: rgba(15,23,42,.55);
+      margin-top:10px;
+    }
+    details summary{
+      cursor:pointer;
+      font-weight:700;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+      list-style:none;
+    }
+    details summary::-webkit-details-marker{ display:none; }
+    .desc{ margin-top:8px; }
+    .splitline{ height:1px; background: rgba(35,48,71,.65); margin:12px 0; }
+
+    .monster-img{
+      width:100%;
+      max-width: 320px;
+      max-height: 260px;
+      margin: 0 auto;
+      display:block;
+      object-fit:contain;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.25);
+    }
+
+    .loading, .error{
+      margin-top:14px;
+      border:1px solid var(--line);
+      border-radius:18px;
+      background: rgba(15,23,42,.85);
+      padding:14px;
+      color:var(--muted);
+    }
+  </style>
+</head>
+<body>
+<!-- Barra di navigazione -->
+<div class="navbar">
+    <a href="{{ url_for('home') }}">
+        <button class="nav-button">🏠 Home</button>
+    </a>
+
+    <a href="{{ url_for('mostri') }}">
+        <button class="nav-button">👹 Mostri</button>
+    </a>
+
+    <a href="{{ url_for('pagina_mostro', index='aboleth') }}">
+        <button class="nav-button">📖 Scheda Mostro</button>
+    </a>
+
+    <a href="{{ url_for('oggetti') }}">
+        <button class="nav-button">🗡️ Oggetti</button>
+    </a>
+
+    <a href="{{ url_for('incantesimi') }}">
+        <button class="nav-button">🪄 Incantesimi</button>
+    </a>
+
+    <a href="{{ url_for('new_5e') }}">
+        <button class="nav-button">📜 Nuove aggiunte 5e</button>
+    </a>
+</div>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>D&D 5e — Mostri</h1>
+        <div class="sub">Lista completa da dnd5eapi.co con ricerca, filtri e scheda dettagliata.</div>
+      </div>
+      <div class="rightmeta">
+        <span class="pill" id="countPill">— mostri</span>
+        <span class="pill" id="shownPill">— mostrati</span>
+        <span class="pill">Fonte: dnd5eapi.co</span>
+      </div>
+    </header>
+
+    <section class="controls">
+      <input id="q" class="wide" placeholder="Cerca per nome (es. goblin, aboleth, dragon...)" />
+
+      <select id="type">
+        <option value="">Tipo (tutti)</option>
+      </select>
+
+      <select id="size">
+        <option value="">Taglia (tutte)</option>
+      </select>
+
+      <select id="cr">
+        <option value="">CR (tutti)</option>
+      </select>
+
+      <button id="reset">Reset</button>
+    </section>
+
+    <div id="status" class="loading">Caricamento lista mostri…</div>
+
+    <section id="grid" class="grid" aria-live="polite"></section>
+
+    <div class="footerbar">
+      <div id="rangeInfo">—</div>
+      <div class="pager">
+        <button id="prev">← Prev</button>
+        <span class="pill" id="pagePill">Page —</span>
+        <button id="next">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modalBackdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-label="Scheda mostro">
+    <div class="modal">
+      <div class="modalHead">
+        <b id="modalTitle">Scheda mostro</b>
+        <button class="closeBtn" id="closeModal">Chiudi</button>
+      </div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "https://www.dnd5eapi.co";
+
+    // State
+    let allMonsters = [];        // { index, name, url }
+    let filtered = [];           // subset
+    let cacheDetails = new Map();// index -> full json
+
+    let page = 1;
+    const PAGE_SIZE = 24;
+
+    // Elements
+    const el = (id) => document.getElementById(id);
+    const grid = el("grid");
+    const statusBox = el("status");
+
+    // Helpers
+    const mod = (score) => Math.floor((score - 10) / 2);
+    const fmtMod = (m) => (m >= 0 ? `+${m}` : `${m}`);
+    const safe = (v) => (v ?? "—");
+    const listOrDash = (arr) => (arr && arr.length ? arr.join(", ") : "—");
+    const uniq = (arr) => [...new Set(arr)].filter(Boolean).sort((a,b)=>a.localeCompare(b));
+
+    async function fetchJSON(url){
+      const res = await fetch(url);
+      if(!res.ok) throw new Error(`HTTP ${res.status} su ${url}`);
+      return await res.json();
+    }
+
+    async function loadList(){
+      statusBox.className = "loading";
+      statusBox.textContent = "Caricamento lista mostri…";
+
+      // DnD 5e API: endpoint lista (di solito già completo)
+      const data = await fetchJSON(`${API_BASE}/api/2014/monsters`);
+      allMonsters = data.results || [];
+
+      el("countPill").textContent = `${allMonsters.length} mostri`;
+      statusBox.style.display = "none";
+
+      // Prima render: senza dettagli (solo nome)
+      filtered = [...allMonsters];
+      page = 1;
+      renderGrid();
+
+      // Carica in background un batch di dettagli per costruire filtri solidi
+      // (senza “async promise” verso l’utente: lo facciamo e aggiorniamo UI quando pronto)
+      await buildFiltersFromSample();
+    }
+
+    async function buildFiltersFromSample(){
+      // Per avere Type/Size/CR veri dobbiamo aprire i dettagli dei mostri.
+      // Farlo per tutti può essere pesante; facciamo progressivo:
+      // - pre-carichiamo i primi N per popolare i filtri
+      // - poi quando apri i dettagli di un mostro, lo mettiamo in cache
+      const SAMPLE = Math.min(120, allMonsters.length);
+      const indices = allMonsters.slice(0, SAMPLE).map(m => m.index);
+
+      const types = [];
+      const sizes = [];
+      const crs = [];
+
+      for (let i=0; i<indices.length; i++){
+        try{
+          const d = await getMonsterDetail(indices[i]);
+          types.push(d.type);
+          sizes.push(d.size);
+          crs.push(String(d.challenge_rating));
+        } catch(_) {}
+      }
+
+      fillSelect("type", uniq(types), "Tipo (tutti)");
+      fillSelect("size", uniq(sizes), "Taglia (tutte)");
+      fillSelect("cr", uniq(crs), "CR (tutti)");
+    }
+
+    function fillSelect(id, options, placeholder){
+      const s = el(id);
+      const current = s.value;
+      s.innerHTML = `<option value="">${placeholder}</option>` + options.map(o=>`<option value="${o}">${o}</option>`).join("");
+      // prova a ripristinare valore se c’era
+      if(options.includes(current)) s.value = current;
+    }
+
+    function applyFilters(){
+      const q = el("q").value.trim().toLowerCase();
+      const type = el("type").value;
+      const size = el("size").value;
+      const cr = el("cr").value;
+
+      // Filtri che richiedono dettagli: se l’utente seleziona type/size/cr,
+      // filtriamo usando la cache + fetch on-demand.
+      const needsDetail = Boolean(type || size || cr);
+
+      if(!needsDetail){
+        filtered = allMonsters.filter(m => !q || m.name.toLowerCase().includes(q));
+        page = 1;
+        renderGrid();
+        return;
+      }
+
+      // Modalità dettagli: filtriamo async (fetch progressivo)
+      filterWithDetails({ q, type, size, cr });
+    }
+
+    async function filterWithDetails({ q, type, size, cr }){
+      statusBox.style.display = "block";
+      statusBox.className = "loading";
+      statusBox.textContent = "Applicazione filtri… (carico dettagli necessari)";
+      grid.innerHTML = "";
+
+      const out = [];
+      for (const m of allMonsters){
+        if(q && !m.name.toLowerCase().includes(q)) continue;
+
+        let d;
+        try{
+          d = await getMonsterDetail(m.index);
+        } catch(_) { continue; }
+
+        if(type && d.type !== type) continue;
+        if(size && d.size !== size) continue;
+        if(cr && String(d.challenge_rating) !== cr) continue;
+
+        out.push(m);
+      }
+
+      filtered = out;
+      page = 1;
+      statusBox.style.display = "none";
+      renderGrid();
+    }
+
+    function renderGrid(){
+      const total = filtered.length;
+      const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      page = Math.min(page, totalPages);
+
+      const start = (page - 1) * PAGE_SIZE;
+      const end = Math.min(start + PAGE_SIZE, total);
+      const slice = filtered.slice(start, end);
+
+      el("shownPill").textContent = `${total} mostrati`;
+      el("pagePill").textContent = `Page ${page} / ${totalPages}`;
+      el("rangeInfo").textContent = total
+        ? `Mostrati ${start + 1}–${end} su ${total}`
+        : "Nessun mostro trovato con questi filtri.";
+
+      el("prev").disabled = (page <= 1);
+      el("next").disabled = (page >= totalPages);
+
+      grid.innerHTML = slice.map(m => `
+        <article class="card" data-index="${m.index}">
+          <h3>${m.name}</h3>
+          <div class="muted">Index: ${m.index}</div>
+          <div class="tags">
+            <span class="tag">Apri scheda</span>
+            <span class="tag">API</span>
+          </div>
+        </article>
+      `).join("");
+
+      // click handlers
+      [...grid.querySelectorAll(".card")].forEach(card => {
+        card.addEventListener("click", () => openMonster(card.dataset.index));
+      });
+    }
+
+    async function getMonsterDetail(index){
+      if(cacheDetails.has(index)) return cacheDetails.get(index);
+      const d = await fetchJSON(`${API_BASE}/api/2014/monsters/${index}`);
+      cacheDetails.set(index, d);
+      return d;
+    }
+
+    // Modal
+    const backdrop = el("modalBackdrop");
+    el("closeModal").addEventListener("click", closeModal);
+    backdrop.addEventListener("click", (e) => { if(e.target === backdrop) closeModal(); });
+    document.addEventListener("keydown", (e) => { if(e.key === "Escape") closeModal(); });
+
+    function closeModal(){
+      backdrop.style.display = "none";
+      el("modalBody").innerHTML = "";
+    }
+
+    async function openMonster(index){
+      backdrop.style.display = "flex";
+      el("modalTitle").textContent = `Caricamento: ${index}…`;
+      el("modalBody").innerHTML = `<div class="loading">Caricamento scheda mostro…</div>`;
+
+      try{
+        const m = await getMonsterDetail(index);
+        el("modalTitle").textContent = `${m.name} (${m.size} ${m.type})`;
+
+        el("modalBody").innerHTML = renderMonsterSheet(m);
+      } catch(err){
+        el("modalBody").innerHTML = `<div class="error">Errore nel caricare il mostro: ${err.message}</div>`;
+      }
+    }
+
+    function renderMonsterSheet(monster){
+      const ac = (monster.armor_class || [])
+        .map(x => `${x.value} (${x.type})`)
+        .join(", ") || "—";
+
+      const speed = monster.speed
+        ? Object.entries(monster.speed).map(([k,v]) => `${k}: ${v}`).join(" • ")
+        : "—";
+
+      const senses = monster.senses
+        ? Object.entries(monster.senses).map(([k,v]) => `${k}: ${v}`).join(" • ")
+        : "—";
+
+      const imgUrl = monster.image ? (API_BASE + monster.image) : "";
+
+      const abilities = [
+        ["STR", monster.strength],
+        ["DEX", monster.dexterity],
+        ["CON", monster.constitution],
+        ["INT", monster.intelligence],
+        ["WIS", monster.wisdom],
+        ["CHA", monster.charisma],
+      ];
+
+      const profs = (monster.proficiencies || []).map(p => {
+        const name = p?.proficiency?.name ?? "Proficiency";
+        const val = p?.value ?? "—";
+        const url = p?.proficiency?.url ? API_BASE + p.proficiency.url : null;
+        return url
+          ? `<a class="tag" href="${url}" target="_blank" rel="noreferrer">${name} +${val}</a>`
+          : `<span class="tag">${name} +${val}</span>`;
+      }).join("") || `<span class="muted">—</span>`;
+
+      return `
+        <div class="sheet">
+          <section class="sheetCard">
+            <h2>Statistiche</h2>
+
+            <div class="row"><div class="k">Classe Armatura</div><div class="v">${ac}</div></div>
+            <div class="row"><div class="k">Punti Ferita</div><div class="v">${safe(monster.hit_points)} (roll: ${safe(monster.hit_points_roll)})</div></div>
+            <div class="row"><div class="k">Dadi Vita</div><div class="v">${safe(monster.hit_dice)}</div></div>
+            <div class="row"><div class="k">Velocità</div><div class="v">${speed}</div></div>
+
+            <div class="splitline"></div>
+
+            <div class="statgrid">
+              ${abilities.map(([k, v]) => {
+                const m = mod(Number(v));
+                return `
+                  <div class="stat">
+                    <div class="k">${k}</div>
+                    <div class="v">${safe(v)}</div>
+                    <div class="m">${fmtMod(m)}</div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+
+            <div class="splitline"></div>
+
+            <h2>Competenze</h2>
+            <div class="tags">${profs}</div>
+
+            <div class="splitline"></div>
+
+            <h2>Difese</h2>
+            <div class="row"><div class="k">Vulnerabilità</div><div class="v">${listOrDash(monster.damage_vulnerabilities)}</div></div>
+            <div class="row"><div class="k">Resistenze</div><div class="v">${listOrDash(monster.damage_resistances)}</div></div>
+            <div class="row"><div class="k">Immunità danni</div><div class="v">${listOrDash(monster.damage_immunities)}</div></div>
+            <div class="row"><div class="k">Immunità condizioni</div><div class="v">${
+              (monster.condition_immunities && monster.condition_immunities.length)
+                ? monster.condition_immunities.map(c => c.name ?? c.index ?? String(c)).join(", ")
+                : "—"
+            }</div></div>
+
+            <div class="splitline"></div>
+
+            <h2>Tratti speciali</h2>
+            ${renderFeatureList(monster.special_abilities)}
+
+            <div class="splitline"></div>
+
+            <h2>Azioni</h2>
+            ${renderActionList(monster.actions)}
+
+            <div class="splitline"></div>
+
+            <h2>Azioni leggendarie</h2>
+            ${renderFeatureList(monster.legendary_actions)}
+
+          </section>
+
+          <aside class="sheetCard">
+            <h2>Info</h2>
+            <div class="row"><div class="k">Allineamento</div><div class="v">${safe(monster.alignment)}</div></div>
+            <div class="row"><div class="k">CR</div><div class="v">${safe(monster.challenge_rating)}</div></div>
+            <div class="row"><div class="k">XP</div><div class="v">${safe(monster.xp)}</div></div>
+            <div class="row"><div class="k">Bonus competenza</div><div class="v">+${safe(monster.proficiency_bonus)}</div></div>
+            <div class="row"><div class="k">Sensi</div><div class="v">${senses}</div></div>
+            <div class="row"><div class="k">Linguaggi</div><div class="v">${safe(monster.languages)}</div></div>
+
+            <div class="splitline"></div>
+
+            <h2>Immagine</h2>
+            ${imgUrl ? `<img class="monster-img" src="${imgUrl}" alt="${monster.name} image">`
+                     : `<div class="muted">Nessuna immagine disponibile.</div>`}
+
+            <div class="splitline"></div>
+
+            <div class="tags">
+              <a class="tag" href="${API_BASE + (monster.url || `/api/2014/monsters/${monster.index}`)}" target="_blank" rel="noreferrer">Apri API</a>
+              <span class="tag">Index: ${safe(monster.index)}</span>
+            </div>
+
+          </aside>
+        </div>
+      `;
+    }
+
+    function renderFeatureList(list){
+      if(!list || !list.length) return `<p class="muted">—</p>`;
+      return list.map(item => {
+        const dc = item.dc?.dc_value
+          ? `DC ${item.dc.dc_value} ${item.dc.dc_type?.name || ""}`.trim()
+          : null;
+        const dmg = (item.damage && item.damage.length)
+          ? item.damage.map(d => `${d.damage_dice} ${d.damage_type?.name || ""}`.trim()).join(", ")
+          : null;
+
+        return `
+          <details>
+            <summary>
+              <span>${item.name ?? "Feature"}</span>
+              <span class="muted">${[dc, dmg].filter(Boolean).join(" • ")}</span>
+            </summary>
+            <div class="desc">${(item.desc || "—").replaceAll("\\n","<br>")}</div>
+          </details>
+        `;
+      }).join("");
+    }
+
+    function renderActionList(list){
+      if(!list || !list.length) return `<p class="muted">—</p>`;
+      return list.map(a => {
+        const bonus = (a.attack_bonus !== undefined) ? `+${a.attack_bonus} to hit` : null;
+        const dc = a.dc?.dc_value ? `DC ${a.dc.dc_value} ${a.dc.dc_type?.name || ""}`.trim() : null;
+        const usage = a.usage?.times ? `${a.usage.times} ${a.usage.type}` : null;
+        const dmg = (a.damage && a.damage.length)
+          ? a.damage.map(d => `${d.damage_dice} ${d.damage_type?.name || ""}`.trim()).join(", ")
+          : null;
+        const sub = (a.actions && a.actions.length)
+          ? a.actions.map(x => `${x.count}× ${x.action_name} (${x.type})`).join(" • ")
+          : null;
+
+        const meta = [bonus, dc, usage, dmg, sub].filter(Boolean).join(" • ");
+
+        return `
+          <details>
+            <summary>
+              <span>${a.name ?? "Action"}</span>
+              <span class="muted">${meta}</span>
+            </summary>
+            <div class="desc">${(a.desc || "—").replaceAll("\\n","<br>")}</div>
+          </details>
+        `;
+      }).join("");
+    }
+
+    // Wire controls
+    el("q").addEventListener("input", debounce(applyFilters, 200));
+    el("type").addEventListener("change", applyFilters);
+    el("size").addEventListener("change", applyFilters);
+    el("cr").addEventListener("change", applyFilters);
+
+    el("reset").addEventListener("click", () => {
+      el("q").value = "";
+      el("type").value = "";
+      el("size").value = "";
+      el("cr").value = "";
+      page = 1;
+      filtered = [...allMonsters];
+      renderGrid();
+    });
+
+    el("prev").addEventListener("click", () => { page--; renderGrid(); });
+    el("next").addEventListener("click", () => { page++; renderGrid(); });
+
+    function debounce(fn, ms){
+      let t;
+      return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(()=>fn(...args), ms);
+      };
+    }
+
+    // Init
+    loadList().catch(err => {
+      statusBox.className = "error";
+      statusBox.textContent = "Errore nel caricamento: " + err.message;
+    });
+  </script>
+</body>
+</html>

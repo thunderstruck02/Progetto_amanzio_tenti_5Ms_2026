@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>D&D 5E - Home</title>
+
+    <!-- Google Font effetto "sangue" -->
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1a0000, #330000);
+            color: #f5f5f5;
+            text-align: center;
+        }
+
+        /* Barra dei bottoni */
+        .navbar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+            background-color: #0d0d0d;
+            box-shadow: 0 0 15px black;
+        }
+
+        .nav-button {
+            padding: 12px 25px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: linear-gradient(145deg, #990000, #660000);
+            color: white;
+            font-weight: bold;
+            transition: 0.3s ease;
+            box-shadow: 0 4px 10px black;
+        }
+
+        .nav-button:hover {
+            background: linear-gradient(145deg, #cc0000, #800000);
+            transform: scale(1.05);
+        }
+
+        /* Titolo */
+        .title {
+            margin-top: 40px;
+            font-size: 80px;
+            font-family: 'Creepster', cursive;
+            color: #b30000;
+            text-shadow: 3px 3px 10px black;
+        }
+
+        /* Descrizioni */
+        .description {
+            max-width: 900px;
+            margin: 30px auto;
+            font-size: 20px;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .api-box {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.6);
+            border-radius: 10px;
+            box-shadow: 0 0 15px black;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Barra di navigazione -->
+<div class="navbar">
+    <a href="{{ url_for('home') }}">
+        <button class="nav-button">🏠 Home</button>
+    </a>
+
+    <a href="{{ url_for('mostri') }}">
+        <button class="nav-button">👹 Mostri</button>
+    </a>
+
+
+    <a href="{{ url_for('oggetti') }}">
+        <button class="nav-button">🗡️ Oggetti</button>
+    </a>
+
+    <a href="{{ url_for('incantesimi') }}">
+        <button class="nav-button">🪄 Incantesimi</button>
+    </a>
+
+    <a href="{{ url_for('new_5e') }}">
+        <button class="nav-button">📜 Nuove aggiunte 5e</button>
+    </a>
+</div>
+
+<!-- Titolo -->
+<div class="title">
+    D&D 5E
+</div>
+
+<!-- Descrizione gioco -->
+<div class="description">
+    Dungeons & Dragons 5ª Edizione è un gioco di ruolo fantasy in cui i giocatori
+    interpretano eroi che esplorano mondi fantastici, affrontano mostri,
+    scoprono tesori e vivono avventure epiche guidate dalla narrazione
+    e dal lancio dei dadi.
+</div>
+
+<!-- Descrizione API -->
+<div class="api-box">
+    <h2>API Description</h2>
+    <p>
+        <!-- PLACEHOLDER -->
+        La nostra API permette di consultare in modo semplice e veloce i contenuti principali di D&D 5ª Edizione.
+        Attraverso specifiche richieste è possibile visualizzare l’elenco dei mostri con le loro descrizioni dettagliate, gli oggetti con caratteristiche e utilizzi, e gli incantesimi completi di effetti e informazioni utili per il gioco.
+
+        Inoltre, l’API include anche una sezione dedicata alle principali novità introdotte dalla 5ª Edizione rispetto alla 4ª, offrendo un elenco chiaro delle aggiunte e dei cambiamenti più rilevanti nel sistema di gioco.
+    </p>
+</div>
+
+</body>
+</html>
