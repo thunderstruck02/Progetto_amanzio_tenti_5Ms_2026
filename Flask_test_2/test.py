@@ -5,16 +5,48 @@ from math import ceil
 import os
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
 
 app = Flask(__name__)
 
 API_BASE = "https://www.dnd5eapi.co"
 API_V1 = f"{API_BASE}/api/2014"
-SPELL_INDEX_FILE = "indexes/spells_index.json"
-MONSTER_INDEX_FILE = "indexes/monsters_index.json"
-EQUIP_INDEX_FILE = "indexes/equipment_index.json"
 
+DATA_DIR = "data"
+# --- File di index utilizzati per velocizzare l'uso dei filtri
+SPELL_INDEX_FILE = os.path.join(DATA_DIR,"/indexes/spells_index.json")
+MONSTER_INDEX_FILE =  os.path.join(DATA_DIR,"/indexes/monsters_index.json")
+EQUIP_INDEX_FILE =  os.path.join(DATA_DIR,"/indexes/equipment_index.json")
+# --- File JSON per memorizzare le informazioni prese dalle request
+MONSTERS_FULL = os.path.join(DATA_DIR, "monsters_full.json")
+EQUIPMENT_FULL = os.path.join(DATA_DIR, "equipment_full.json")
+SPELLS_FULL = os.path.join(DATA_DIR, "spells_full.json")
+
+# Se la directory non esiste, la crea (permette di condividere il file, etc.)
+os.makedirs(DATA_DIR, exist_ok=True)
+
+# inizializzazione della sessione (velocizza le request e permette di conservarle)
 session = requests.Session()
+
+# -- permette la creazione sicura dei file json
+def atomic_write_json(path: str, obj):
+    """Scrive JSON in modo 'sicuro' (evita file rotti se interrompi la scrittura)."""
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(obj, f, ensure_ascii=False)
+    os.replace(tmp, path)
+
+@lru_cache(maxsize=8)
+def load_json_dict(path: str) -> dict:
+    """Carica JSON (dict) e lo cachea in RAM."""
+    if not os.path.exists(path):
+        return {}
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def reload_json(path: str):
+    """Invalida cache per ricaricare file aggiornato."""
+    load_json_dict.cache_clear()
 
 # ---------- Helpers ----------
 def api_get(path: str):
@@ -108,6 +140,34 @@ def weight_bucket(weight):
         return "heavy"
     return None
 
+# Costruire il filer JSON per gli oggetti/equipaggiamento
+def build_equipment_full():
+    base = get_equipment_list()
+    indices = [it["index"] for it in base]
+
+    out = {}
+    workers = 10
+
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        futs = {ex.submit(get_equipment_detail, idx): idx for idx in indices}
+        for fut in as_completed(futs):
+            idx = futs[fut]
+            d = fut.result()
+            if not d:
+                continue
+            if d.get("image"):
+                d["image_full"] = API_BASE + d["image"]
+            out[idx] = d
+
+    atomic_write_json(EQUIPMENT_FULL, out)
+    return len(out)
+
+@app.route("/admin/build_equipment_json")
+def admin_build_equipment_json():
+    n = build_equipment_full()
+    reload_json(EQUIPMENT_FULL)
+    return f"OK - equipment_full.json built: {n}"
+
 # --- MONSTERS (cache and helpers) ---
 
 @lru_cache(maxsize=2048)
@@ -187,6 +247,34 @@ def parse_cr(value: str):
     except:
         return None
 
+# -- Costruzione del file JSON per i mostri
+def build_monsters_full():
+    base = get_monsters_list()
+    indices = [m["index"] for m in base]
+
+    out = {}  # index -> full monster json
+    workers = 10
+
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        futs = {ex.submit(get_monster_detail, idx): idx for idx in indices}
+        for fut in as_completed(futs):
+            idx = futs[fut]
+            d = fut.result()
+            if not d:
+                continue
+            if d.get("image"):
+                d["image_full"] = API_BASE + d["image"]
+            out[idx] = d
+
+    atomic_write_json(MONSTERS_FULL, out)
+    return len(out)
+
+@app.route("/admin/build_monsters_json")
+def admin_build_monsters_json():
+    n = build_monsters_full()
+    reload_json(MONSTERS_FULL)
+    return f"OK - monsters_full.json built: {n}"
+
 # -------- SPELLS (cache and helpers) --------
 
 @lru_cache(maxsize=64)
@@ -258,6 +346,58 @@ def normalize_components(components):
         return set()
     return set([str(c).upper().strip() for c in components])
 
+# -- Costuire il file JSON per gli incantesimi
+def build_spells_full():
+    base = get_spells_list()
+    indices = [s["index"] for s in base]
+
+    out = {}
+    workers = 10
+
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        futs = {ex.submit(get_spell_detail, idx): idx for idx in indices}
+        for fut in as_completed(futs):
+            idx = futs[fut]
+            d = fut.result()
+            if not d:
+                continue
+            out[idx] = d
+
+    atomic_write_json(SPELLS_FULL, out)
+    return len(out)
+
+@app.route("/admin/build_spells_json")
+def admin_build_spells_json():
+    n = build_spells_full()
+    reload_json(SPELLS_FULL)
+    return f"OK - spells_full.json built: {n}"
+
+
+# -- COMANDO GENERALE PER COSTRUIRE TUTTI I JSON
+@app.route("/admin/build_all_json")
+def admin_build_all_json():
+    started = datetime.now()
+
+    n_mon = build_monsters_full()
+    reload_json(MONSTERS_FULL)
+
+    n_eq = build_equipment_full()
+    reload_json(EQUIPMENT_FULL)
+
+    n_sp = build_spells_full()
+    reload_json(SPELLS_FULL)
+
+    ended = datetime.now()
+    delta = (ended - started).total_seconds()
+
+    return (
+        "OK - build_all_json completed\n"
+        f"monsters: {n_mon}\n"
+        f"equipment: {n_eq}\n"
+        f"spells: {n_sp}\n"
+        f"time_sec: {delta:.2f}\n"
+    )
+
 # Make helper available in templates
 app.jinja_env.globals["ability_mod"] = ability_mod
 
@@ -278,76 +418,54 @@ def mostri():
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 24, type=int)
 
-    idx = load_monster_index()
-    if not idx:
-        return render_template("index_missing.html",
-                               title="Mostri",
-                               admin_url="/admin/rebuild_monsters_index")
+    data = load_json_dict(MONSTERS_FULL)
+    if not data:
+        return render_template("index_missing.html", title="Mostri", admin_url="/admin/build_monsters_json")
 
-    monsters = list(idx.values())
+    monsters = list(data.values())
 
-    # filtri in RAM
     filtered = []
     for m in monsters:
-        if q and q not in m["name"].lower():
+        name = (m.get("name") or "").lower()
+        if q and q not in name:
             continue
-        if f_type and m.get("type") != f_type:
+        if f_type and (m.get("type","").lower() != f_type):
             continue
-        if f_size and m.get("size") != f_size:
+        if f_size and (m.get("size","") != f_size):
             continue
-        if f_cr and m.get("cr") != f_cr:
+        if f_cr and str(m.get("challenge_rating","")) != f_cr:
             continue
         filtered.append(m)
 
-    # ordinamento: per CR poi nome (opzionale)
-    filtered.sort(key=lambda x: (parse_cr(x.get("cr", "")) or 99, x.get("name", "")))
+    filtered.sort(key=lambda x: (parse_cr(str(x.get("challenge_rating",""))) or 99, x.get("name","")))
 
     total = len(filtered)
     total_pages = max(1, ceil(total / per_page))
     page = max(1, min(page, total_pages))
-
     start = (page - 1) * per_page
     end = start + per_page
-    page_slice = filtered[start:end]
 
-    # dettagli completi SOLO per i mostri in pagina (se servono in card)
-    items = []
-    for m in page_slice:
-        d = get_monster_detail(m["index"])
-        items.append(({"index": m["index"], "name": m["name"], "url": f"/api/2014/monsters/{m['index']}"}, d))
+    page_items = [({"index": m["index"], "name": m["name"], "url": m.get("url","")}, m) for m in filtered[start:end]]
 
-    type_options = [
-        "aberration", "beast", "celestial", "construct", "dragon", "elemental",
-        "fey", "fiend", "giant", "humanoid", "monstrosity", "ooze", "plant", "undead"
-    ]
-    size_options = ["Tiny", "Small", "Medium", "Large", "Huge", "Gargantuan"]
+    type_options = ["aberration","beast","celestial","construct","dragon","elemental","fey","fiend","giant","humanoid","monstrosity","ooze","plant","undead"]
+    size_options = ["Tiny","Small","Medium","Large","Huge","Gargantuan"]
     cr_options = ["0","1/8","1/4","1/2","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30"]
 
     return render_template(
         "mostri.html",
-        items=items,
-        total=total,
-        page=page,
-        total_pages=total_pages,
-        per_page=per_page,
-        q=q,
-        f_type=f_type,
-        f_size=f_size,
-        f_cr=f_cr,
-        type_options=type_options,
-        size_options=size_options,
-        cr_options=cr_options
+        items=page_items,
+        total=total, page=page, total_pages=total_pages, per_page=per_page,
+        q=q, f_type=f_type, f_size=f_size, f_cr=f_cr,
+        type_options=type_options, size_options=size_options, cr_options=cr_options
     )
+
 @app.route("/mostri/<index>")
 def mostro(index):
-    d = get_monster_detail(index)
-    if not d:
+    data = load_json_dict(MONSTERS_FULL)
+    m = data.get(index)
+    if not m:
         abort(404)
-    # aggiungo url immagine completo se presente
-    if d.get("image"):
-        d["image_full"] = API_BASE + d["image"]
-    return render_template("mostro.html", monster=d)
-
+    return render_template("mostro.html", monster=m)
 # -------- EQUIPMENT ROUTES --------
 
 @app.route("/oggetti")
@@ -359,69 +477,58 @@ def oggetti():
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 24, type=int)
 
-    idx = load_equipment_index()
-    if not idx:
-        return render_template("index_missing.html",
-                               title="Oggetti",
-                               admin_url="/admin/rebuild_equipment_index")
+    data = load_json_dict(EQUIPMENT_FULL)
+    if not data:
+        return render_template("index_missing.html", title="Oggetti", admin_url="/admin/build_equipment_json")
 
-    equip = list(idx.values())
+    items_all = list(data.values())
 
-    # opzioni categoria (ora gratis)
-    category_options = sorted({e.get("category","") for e in equip if e.get("category")})
+    # categorie gratuite
+    category_options = sorted({(d.get("equipment_category") or {}).get("name") for d in items_all if (d.get("equipment_category") or {}).get("name")})
 
-    # filtri in RAM
     filtered = []
-    for e in equip:
-        if q and q not in e["name"].lower():
+    for it in items_all:
+        name = (it.get("name") or "").lower()
+        if q and q not in name:
             continue
-        if category and e.get("category") != category:
+
+        cat = (it.get("equipment_category") or {}).get("name", "")
+        if category and cat != category:
             continue
-        if cost and e.get("cost_bucket") != cost:
+
+        if cost and cost_bucket(it.get("cost")) != cost:
             continue
-        if weight and e.get("weight_bucket") != weight:
+
+        if weight and weight_bucket(it.get("weight")) != weight:
             continue
-        filtered.append(e)
+
+        filtered.append(it)
 
     filtered.sort(key=lambda x: x.get("name",""))
 
     total = len(filtered)
     total_pages = max(1, ceil(total / per_page))
     page = max(1, min(page, total_pages))
-
     start = (page - 1) * per_page
     end = start + per_page
-    page_slice = filtered[start:end]
 
-    # dettagli completi SOLO per quelli in pagina
-    items = []
-    for e in page_slice:
-        d = get_equipment_detail(e["index"])
-        items.append(({"index": e["index"], "name": e["name"], "url": f"/api/2014/equipment/{e['index']}"}, d))
+    page_items = [({"index": it["index"], "name": it["name"], "url": it.get("url","")}, it) for it in filtered[start:end]]
 
     return render_template(
         "oggetti.html",
-        items=items,
-        total=total,
-        page=page,
-        total_pages=total_pages,
-        per_page=per_page,
-        q=q,
-        category=category,
-        cost=cost,
-        weight=weight,
+        items=page_items,
+        total=total, page=page, total_pages=total_pages, per_page=per_page,
+        q=q, category=category, cost=cost, weight=weight,
         category_options=category_options
     )
+
 @app.route("/oggetti/<index>")
 def oggetto(index):
-    d = get_equipment_detail(index)
-    if not d:
+    data = load_json_dict(EQUIPMENT_FULL)
+    it = data.get(index)
+    if not it:
         abort(404)
-
-    if d.get("image"):
-        d["image_full"] = API_BASE + d["image"]
-
-    return render_template("oggetto.html", item=d)
+    return render_template("oggetto.html", item=it)
 
 # -------- SPELLS ROUTES --------
 @app.route("/incantesimi")
@@ -429,28 +536,27 @@ def incantesimi():
     q = request.args.get("q", "", type=str).strip().lower()
     level = request.args.get("level", "", type=str).strip()
     school = request.args.get("school", "", type=str).strip()
-    ritual = request.args.get("ritual", "", type=str).strip()  # yes/no/""
-    conc = request.args.get("concentration", "", type=str).strip()  # yes/no/""
+    ritual = request.args.get("ritual", "", type=str).strip()
+    conc = request.args.get("concentration", "", type=str).strip()
     comp = request.args.get("comp", "", type=str).strip().upper()
-
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 24, type=int)
 
-    # Indice locale (veloce)
-    idx = load_spell_index()
+    data = load_json_dict(SPELLS_FULL)
+    if not data:
+        return render_template("index_missing.html", title="Incantesimi", admin_url="/admin/build_spells_json")
 
-    if not idx:
-        return render_template("index_missing.html")
-    spells = list(idx.values())  # lista di dict
+    spells = list(data.values())
 
-    # Filtri in RAM (istantanei)
     filtered = []
     for s in spells:
-        if q and q not in s["name"].lower():
+        name = (s.get("name") or "").lower()
+        if q and q not in name:
             continue
         if level != "" and str(s.get("level")) != level:
             continue
-        if school and s.get("school") != school:
+        sch = (s.get("school") or {}).get("name")
+        if school and sch != school:
             continue
         if ritual == "yes" and not s.get("ritual"):
             continue
@@ -460,26 +566,21 @@ def incantesimi():
             continue
         if conc == "no" and s.get("concentration"):
             continue
-        if comp and comp not in set(s.get("components") or []):
-            continue
+        if comp:
+            comps = set([c.upper() for c in (s.get("components") or [])])
+            if comp not in comps:
+                continue
         filtered.append(s)
 
-    # Ordina (opzionale ma utile)
-    filtered.sort(key=lambda x: (x.get("level", 99), x.get("name", "")))
+    filtered.sort(key=lambda x: (x.get("level", 99), x.get("name","")))
 
     total = len(filtered)
     total_pages = max(1, ceil(total / per_page))
     page = max(1, min(page, total_pages))
-
     start = (page - 1) * per_page
     end = start + per_page
-    page_slice = filtered[start:end]
 
-    # Dettagli completi SOLO per quelli in pagina (se vuoi mostrarli in card)
-    items = []
-    for s in page_slice:
-        d = get_spell_detail(s["index"])
-        items.append(({"index": s["index"], "name": s["name"], "url": f"/api/2014/spells/{s['index']}"}, d))
+    page_items = [({"index": sp["index"], "name": sp["name"], "url": sp.get("url","")}, sp) for sp in filtered[start:end]]
 
     level_options = ["0","1","2","3","4","5","6","7","8","9"]
     school_options = ["Abjuration","Conjuration","Divination","Enchantment","Evocation","Illusion","Necromancy","Transmutation"]
@@ -487,28 +588,19 @@ def incantesimi():
 
     return render_template(
         "incantesimi.html",
-        items=items,
-        total=total,
-        page=page,
-        total_pages=total_pages,
-        per_page=per_page,
-        q=q,
-        level=level,
-        school=school,
-        ritual=ritual,
-        concentration=conc,
-        comp=comp,
-        level_options=level_options,
-        school_options=school_options,
-        comp_options=comp_options
+        items=page_items,
+        total=total, page=page, total_pages=total_pages, per_page=per_page,
+        q=q, level=level, school=school, ritual=ritual, concentration=conc, comp=comp,
+        level_options=level_options, school_options=school_options, comp_options=comp_options
     )
+
 @app.route("/incantesimi/<index>")
 def incantesimo(index):
-    d = get_spell_detail(index)
-    if not d:
+    data = load_json_dict(SPELLS_FULL)
+    sp = data.get(index)
+    if not sp:
         abort(404)
-    return render_template("incantesimo.html", spell=d)
-
+    return render_template("incantesimo.html", spell=sp)
 # -------- NEW_5E ROUTE --------
 
 @app.route("/new_5e")
