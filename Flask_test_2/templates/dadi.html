@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Tira-dadi — D&D 5e{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='dadi.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Uncial+Antiqua&display=swap" rel="stylesheet">
+{% endblock %}
+
+
+{% block content %}
+  <div class="wrap">
+    <h1>Tira i dadi</h1>
+
+    <div class="card">
+      <div class="row">
+        <div>
+          <label for="preset">Dado</label>
+          <select id="preset">
+            <option value="4">d4</option>
+            <option value="6">d6</option>
+            <option value="8">d8</option>
+            <option value="10">d10</option>
+            <option value="12">d12</option>
+            <option value="20" selected>d20</option>
+            <option value="100">d100</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="count">Quanti</label>
+          <input id="count" type="number" min="1" max="50" value="1" />
+        </div>
+
+        <div>
+          <label for="mod">Mod</label>
+          <input id="mod" type="number" min="-50" max="50" value="0" />
+        </div>
+
+        <div>
+          <label for="adv">Vantaggio/Svantaggio</label>
+          <select id="adv">
+            <option value="normal" selected>Normale</option>
+            <option value="adv">Vantaggio (solo d20)</option>
+            <option value="dis">Svantaggio (solo d20)</option>
+          </select>
+        </div>
+
+        <div>
+          <button id="rollBtn">Tira</button>
+          <button id="clearBtn">Reset</button>
+        </div>
+      </div>
+
+      <div class="result" id="out">
+        <div class="muted">Suggerimento: per un tiro salvezza/abilità usa 1d20 + mod.</div>
+      </div>
+    <div class="dice-area" id="diceContainer">
+    </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='dadi.js') }}"></script>
+{% endblock %}

@@ -607,5 +607,9 @@ def incantesimo(index):
 def new_5e():
     return render_template("new_5e.html")
 
+@app.route("/dadi")
+def dadi():
+    return render_template("dadi.html")
+
 if __name__ == "__main__":
     app.run(debug=True)

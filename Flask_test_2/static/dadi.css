@@ -1,0 +1,129 @@
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #1a0000, #330000);
+  color:#f5f5f5;
+  text-align:center;
+}
+.navbar{
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  padding:16px;
+  background:#0d0d0d;
+  box-shadow:0 2px 8px rgba(0,0,0,.4);
+}
+.navbar a{
+  color:#f5f5f5;
+  text-decoration:none;
+  padding:10px 14px;
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:10px;
+}
+.wrap{max-width:900px;margin:24px auto;padding:0 16px;}
+.card{
+  background: rgba(0,0,0,.35);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius:16px;
+  padding:18px;
+  text-align:left;
+}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:end;}
+label{display:block;font-size:.9rem;opacity:.9;margin-bottom:6px;}
+input, select{
+  background:#111;
+  color:#f5f5f5;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:10px;
+  padding:10px 12px;
+  min-width:130px;
+}
+button{
+  cursor:pointer;
+  background:#111;
+  color:#f5f5f5;
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:10px;
+  padding:10px 14px;
+}
+.result{
+  margin-top:16px;
+  font-size:1.05rem;
+  line-height:1.5;
+  white-space:pre-wrap;
+}
+.big{
+  font-size:2rem;
+  font-weight:700;
+  margin:10px 0 0;
+}
+.muted{opacity:.75;font-size:.9rem}
+
+/* Dadi layout */
+.dice-area{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  justify-content:center;
+  margin-top:16px;
+}
+
+/* Dado base */
+.dice-face{
+  width:70px;
+  height:70px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.35);
+  font-family: "Cinzel", serif;
+  font-size:1.2rem;
+  box-shadow: 0 6px 14px rgba(0,0,0,.35);
+  user-select:none;
+  transform: translateY(0) scale(1);
+}
+
+/* Micro-animazione singola (per ogni dado) */
+.dice-face.pop{
+  animation: pop 420ms cubic-bezier(.2,.9,.2,1) both;
+}
+
+@keyframes pop{
+  0%   { transform: translateY(-16px) rotate(-8deg) scale(.9); opacity: 0; }
+  55%  { transform: translateY(4px) rotate(4deg) scale(1.08); opacity: 1; }
+  75%  { transform: translateY(-2px) rotate(-2deg) scale(1.03); }
+  100% { transform: translateY(0) rotate(0deg) scale(1); }
+}
+
+/* Evidenza 20 naturale (d20) */
+.dice-face.crit{
+  border-color: rgba(255, 215, 0, .9);
+  box-shadow: 0 0 12px rgba(255,215,0,.6),
+              0 0 24px rgba(255,215,0,.4);
+  animation: pop 420ms cubic-bezier(.2,.9,.2,1) both,
+             critGlow 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes critGlow{
+  from { box-shadow: 0 0 10px rgba(255,215,0,.5),
+                     0 0 20px rgba(255,215,0,.3); }
+  to   { box-shadow: 0 0 18px rgba(255,215,0,.9),
+                     0 0 32px rgba(255,215,0,.6); }
+}
+/* Evidenza 1 naturale (d20) */
+.dice-face.fail{
+  border-color: rgba(255, 80, 80, .9);
+  box-shadow: 0 0 10px rgba(255,80,80,.6);
+  animation: pop 420ms cubic-bezier(.2,.9,.2,1) both,
+             shake 0.35s ease-in-out 2;
+}
+
+@keyframes shake{
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  50% { transform: translateX(3px); }
+  75% { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}

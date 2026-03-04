@@ -1,15 +1,12 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>D&D 5e — Novità e cambiamenti rispetto alle edizioni precedenti</title>
+{% extends "base.html" %}
+{% block title %}New_5e — D&D 5e{% endblock %}
 
-  <!-- Font "da libro" -->
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Uncial+Antiqua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='new_5e.css') }}" />
-</head>
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='new_5e.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Uncial+Antiqua&display=swap" rel="stylesheet">
+{% endblock %}
 
+{% block content %}
 <body>
     <header class="topbar">
       <div class="brand">
@@ -19,15 +16,6 @@
           <div class="brand-sub">Nuove aggiunte della 5ª Edizione</div>
         </div>
       </div>
-
-      <!-- NAVIGAZIONE PRINCIPALE -->
-      <nav class="nav main-nav">
-          <a href="{{ url_for('home') }}"><button class="nav-btn">🏠 Home</button></a>
-          <a href="{{ url_for('mostri') }}"><button class="nav-btn">👹 Mostri</button></a>
-          <a href="{{ url_for('oggetti') }}"><button class="nav-btn">🗡️ Oggetti</button></a>
-          <a href="{{ url_for('incantesimi') }}"><button class="nav-btn">🪄 Incantesimi</button></a>
-          <a href="{{ url_for('new_5e') }}"><button class="nav-btn">📜 Nuove aggiunte 5e</button></a>
-      </nav>
     </header>
 
   <main class="wrap">
@@ -258,5 +246,4 @@
       </div>
     </footer>
   </main>
-</body>
-</html>
+{% endblock %}
