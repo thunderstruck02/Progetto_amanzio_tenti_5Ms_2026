@@ -4,7 +4,7 @@
 
 # Importare tutte le librerie necessarie
 # Flask per il backend della pagina web
-from flask import Flask, render_template, request, abort, url_for
+from flask import Flask, render_template, request, abort, url_for, redirect
 # Requests per compiere richieste all'API
 import requests
 # lru_cache per salvare i dati della sessione in cache ed evitare tempi di attesi ripetuti
@@ -36,6 +36,7 @@ EQUIP_INDEX_FILE =  os.path.join(DATA_DIR,"/indexes/equipment_index.json")
 MONSTERS_FULL = os.path.join(DATA_DIR, "monsters_full.json")
 EQUIPMENT_FULL = os.path.join(DATA_DIR, "equipment_full.json")
 SPELLS_FULL = os.path.join(DATA_DIR, "spells_full.json")
+CHARACTER_SHEETS_FILE = os.path.join(DATA_DIR, "character_sheets.json")
 
 # Se la directory non esiste, la crea (permette di condividere il file, etc.)
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -67,6 +68,64 @@ def load_json_dict(path: str) -> dict:
 def reload_json(path: str):
     """Invalida cache per ricaricare file aggiornato."""
     load_json_dict.cache_clear()
+
+def load_character_sheets():
+    """Carica le schede custom dal file JSON locale."""
+    if not os.path.exists(CHARACTER_SHEETS_FILE):
+        return []
+    with open(CHARACTER_SHEETS_FILE, "r", encoding="utf-8") as f:
+        payload = json.load(f)
+    return payload.get("sheets", [])
+
+
+def save_character_sheets(sheets):
+    """Salva tutte le schede custom nel file JSON locale."""
+    atomic_write_json(CHARACTER_SHEETS_FILE, {"sheets": sheets})
+
+
+def build_sheet_options():
+    """Prepara liste base oggetti/incantesimi per la pagina schede."""
+    spells_dict = load_json_dict(SPELLS_FULL)
+    equipment_dict = load_json_dict(EQUIPMENT_FULL)
+
+    spells = sorted([
+        {"index": s.get("index"), "name": s.get("name")}
+        for s in spells_dict.values() if s.get("index") and s.get("name")
+    ], key=lambda x: x["name"])
+
+    equipment = sorted([
+        {"index": e.get("index"), "name": e.get("name")}
+        for e in equipment_dict.values() if e.get("index") and e.get("name")
+    ], key=lambda x: x["name"])
+
+    return spells, equipment
+
+
+def enrich_sheet_entries(sheets):
+    """Arricchisce una scheda con nomi/link utili al template."""
+    spells_dict = load_json_dict(SPELLS_FULL)
+    equipment_dict = load_json_dict(EQUIPMENT_FULL)
+
+    enriched = []
+    for sheet in sheets:
+        spell_entries = []
+        for idx in sheet.get("spells", []):
+            detail = spells_dict.get(idx)
+            if detail:
+                spell_entries.append({"index": idx, "name": detail.get("name", idx)})
+
+        item_entries = []
+        for idx in sheet.get("items", []):
+            detail = equipment_dict.get(idx)
+            if detail:
+                item_entries.append({"index": idx, "name": detail.get("name", idx)})
+
+        copied = dict(sheet)
+        copied["spell_entries"] = spell_entries
+        copied["item_entries"] = item_entries
+        enriched.append(copied)
+
+    return enriched
 
 # ---------- Helpers ----------
 # api_get è la funzione che costruire l'url per eseguire la request all'API, per poi creare la sessione (r)
@@ -642,6 +701,72 @@ def incantesimo(index):
     if not sp:
         abort(404)
     return render_template("incantesimo.html", spell=sp)
+@app.route("/schede")
+def schede():
+    spells, equipment = build_sheet_options()
+    sheets = enrich_sheet_entries(load_character_sheets())
+    message = request.args.get("message", "", type=str)
+    missing_data = (not spells) or (not equipment)
+
+    return render_template(
+        "schede.html",
+        sheets=sheets,
+        spells=spells,
+        equipment=equipment,
+        message=message,
+        missing_data=missing_data
+    )
+
+
+@app.route("/schede/crea", methods=["POST"])
+def crea_scheda():
+    name = request.form.get("name", "", type=str).strip()
+    classe = request.form.get("class", "", type=str).strip()
+    level = request.form.get("level", 1, type=int)
+    background = request.form.get("background", "", type=str).strip()
+    notes = request.form.get("notes", "", type=str).strip()
+
+    selected_spells = request.form.getlist("spells")
+    selected_items = request.form.getlist("items")
+
+    if not name or not classe:
+        return redirect(url_for("schede", message="Nome e classe sono obbligatori."))
+
+    level = max(1, min(level, 20))
+
+    spells_dict = load_json_dict(SPELLS_FULL)
+    equipment_dict = load_json_dict(EQUIPMENT_FULL)
+
+    valid_spells = [idx for idx in selected_spells if idx in spells_dict]
+    valid_items = [idx for idx in selected_items if idx in equipment_dict]
+
+    sheets = load_character_sheets()
+    sheet_id = int(datetime.now().timestamp() * 1000)
+
+    sheets.append({
+        "id": sheet_id,
+        "name": name,
+        "class": classe,
+        "level": level,
+        "background": background,
+        "notes": notes,
+        "spells": valid_spells,
+        "items": valid_items,
+        "created_at": datetime.now().strftime("%d/%m/%Y %H:%M")
+    })
+
+    save_character_sheets(sheets)
+    return redirect(url_for("schede", message="Scheda creata con successo!"))
+
+
+@app.route("/schede/<int:sheet_id>/elimina", methods=["POST"])
+def elimina_scheda(sheet_id):
+    sheets = load_character_sheets()
+    filtered = [s for s in sheets if s.get("id") != sheet_id]
+    save_character_sheets(filtered)
+    return redirect(url_for("schede", message="Scheda eliminata."))
+
+
 # -------- NEW_5E ROUTE --------
 
 @app.route("/new_5e")
