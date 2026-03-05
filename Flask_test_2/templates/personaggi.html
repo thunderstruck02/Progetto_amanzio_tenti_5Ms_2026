@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Personaggi{% endblock %}
+{% block content %}
+<div class="container">
+  <h1>🧙 Personaggi</h1>
+
+  <div style="margin: 12px 0;">
+    <a class="tag" href="{{ url_for('scheda_personaggio') }}">➕ Crea nuovo personaggio</a>
+  </div>
+
+  {% if not characters %}
+    <p>Nessun personaggio salvato.</p>
+  {% else %}
+    <div class="grid">
+      {% for c in characters %}
+        <div class="card">
+          <h3>{{ c.nome }}</h3>
+          <p><b>Classe:</b> {{ c.classe }} — <b>Livello:</b> {{ c.livello }}</p>
+            <p><b>HP:</b> {{ c.hp }} — <b>Dadi Vita:</b> {{ c.hit_dice }}</p>
+          <p class="muted"><small>Aggiornato: {{ c.updated_at }}</small></p>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+            <a class="tag" href="{{ url_for('personaggio', char_id=c.id) }}">Apri</a>
+            <a class="tag" href="{{ url_for('scheda_personaggio') }}?id={{ c.id }}">Modifica</a>
+
+            <form method="POST" action="{{ url_for('personaggio_delete', char_id=c.id) }}" style="display:inline;">
+              <button class="tag" type="submit">Elimina</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

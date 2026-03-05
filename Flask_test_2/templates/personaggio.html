@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}{{ c.nome }}{% endblock %}
+{% block content %}
+<div class="container">
+  <h1>📜 {{ c.nome }}</h1>
+  <p><b>Classe:</b> {{ c.classe }} — <b>Livello:</b> {{ c.livello }}</p>
+    <p><b>HP:</b> {{ c.hp }} — <b>Dadi Vita:</b> {{ c.hit_dice }}</p>
+  <div class="panel">
+    <h2>Statistiche</h2>
+    <ul>
+      <li>FOR: {{ c.stats.str }}</li>
+      <li>DES: {{ c.stats.dex }}</li>
+      <li>COS: {{ c.stats.con }}</li>
+      <li>INT: {{ c.stats.int }}</li>
+      <li>SAG: {{ c.stats.wis }}</li>
+      <li>CAR: {{ c.stats.cha }}</li>
+    </ul>
+  </div>
+
+  <div class="panel">
+    <h2>Descrizione</h2>
+    <p>{{ c.descrizione }}</p>
+
+    <h2>Storia</h2>
+    <p>{{ c.storia }}</p>
+  </div>
+
+  <div class="panel">
+    <h2>Inventario</h2>
+    {% if not c.inventario %}
+      <p>Nessun oggetto.</p>
+    {% else %}
+      <ul>
+        {% for idx in c.inventario %}
+          <li><a href="{{ url_for('oggetto', index=idx) }}">{{ idx }}</a></li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+
+  <div class="panel">
+    <h2>Abilità</h2>
+    {% if not c.skills %}
+      <p>Nessuna abilità.</p>
+    {% else %}
+      <ul>
+        {% for s in c.skills %}
+          <li><b>{{ s.nome }}</b> — {{ s.dice }}<br><small>{{ s.desc }}</small></li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+
+  <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:12px;">
+    <a class="tag" href="{{ url_for('scheda_personaggio') }}?id={{ c.id }}">✏️ Modifica</a>
+    <a class="tag" href="{{ url_for('personaggi') }}">⬅️ Torna alla lista</a>
+  </div>
+</div>
+{% endblock %}
