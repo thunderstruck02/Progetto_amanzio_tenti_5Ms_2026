@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% block title %}Scheda Personaggio{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>📜 Scheda Personaggio Arcana</h1>
+
+    <form id="sheetForm"
+          method="POST"
+          action="{{ url_for('scheda_personaggio') }}"
+          onsubmit="serializeForSubmit()">
+
+    <input type="hidden" name="char_id" value="{{ c.id if c else '' }}">
+
+    <div class="panel">
+      <label>Nome Personaggio</label>
+      <input id="nome" name="nome" value="{{ c.nome if c else '' }}" required>
+
+      <label>Classe</label>
+      <select id="classe" name="classe">
+        {% set cls = c.classe if c else 'Guerriero' %}
+        {% for opt in ['Guerriero','Mago','Ladro','Chierico','Ranger','Bardo'] %}
+          <option {% if opt==cls %}selected{% endif %}>{{ opt }}</option>
+        {% endfor %}
+      </select>
+
+      <label>Livello</label>
+      <input type="number" id="livello" name="livello" value="{{ c.livello if c else 1 }}" min="1">
+
+      <div class="points">Punti statistiche rimanenti: <span id="punti">1</span></div>
+
+      <label>HP</label>
+      <input type="number" id="hp" name="hp" value="{{ c.hp if c else 10 }}">
+
+        <label>Dadi Vita</label>
+        <input type="number" id="hit_dice" name="hit_dice" value="{{ c.hit_dice if c else 1 }}">
+    </div>
+
+    <div class="panel">
+      <h2 class="magic">Statistiche</h2>
+      <div class="stats">
+        <div class="stat">Forza <div id="str">10</div><button type="button" onclick="modStat('str')">+</button></div>
+        <div class="stat">Destrezza <div id="dex">10</div><button type="button" onclick="modStat('dex')">+</button></div>
+        <div class="stat">Costituzione <div id="con">10</div><button type="button" onclick="modStat('con')">+</button></div>
+        <div class="stat">Intelligenza <div id="int">10</div><button type="button" onclick="modStat('int')">+</button></div>
+        <div class="stat">Saggezza <div id="wis">10</div><button type="button" onclick="modStat('wis')">+</button></div>
+        <div class="stat">Carisma <div id="cha">10</div><button type="button" onclick="modStat('cha')">+</button></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="magic">Descrizione</h2>
+      <textarea id="descrizione" name="descrizione">{{ c.descrizione if c else '' }}</textarea>
+
+      <h2 class="magic">Storia Passata</h2>
+      <textarea id="storia" name="storia">{{ c.storia if c else '' }}</textarea>
+    </div>
+
+    <div class="panel">
+      <h2 class="magic">Inventario</h2>
+
+      <select id="oggetti">
+        {% for idx, name in equipment_choices %}
+          <option value="{{ idx }}">{{ name }}</option>
+        {% endfor %}
+      </select>
+
+      <button type="button" onclick="aggiungiOggetto()">Aggiungi</button>
+      <div id="inventario"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="magic">Abilità / Attacchi</h2>
+
+      <label>Nome abilità</label>
+      <input id="skillNome">
+
+      <label>Descrizione</label>
+      <input id="skillDesc">
+
+      <label>Dado di danno</label>
+      <select id="skillDice">
+        <option>d4</option><option>d6</option><option>d8</option>
+        <option>d10</option><option>d12</option><option>d20</option>
+      </select>
+
+      <button type="button" onclick="aggiungiSkill()">Aggiungi Abilità</button>
+      <div id="skills"></div>
+    </div>
+
+    <!-- Hidden: qui JS mette JSON -->
+    <input type="hidden" name="stats_json" id="stats_json">
+    <input type="hidden" name="inventory_json" id="inventory_json">
+    <input type="hidden" name="skills_json" id="skills_json">
+    <input type="hidden" name="punti_rimanenti" id="punti_rimanenti">
+
+    <div class="panel">
+      <button type="submit">💾 Salva Scheda</button>
+      <a class="tag" href="{{ url_for('personaggi') }}">⬅️ Torna alla lista</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const baseStats = {
+  Guerriero:  { str: 15, dex: 12, con: 14, int: 8,  wis: 10, cha: 10 },
+  Mago:       { str: 8,  dex: 12, con: 10, int: 15, wis: 14, cha: 10 },
+  Ladro:      { str: 10, dex: 15, con: 12, int: 12, wis: 10, cha: 10 },
+  Chierico:   { str: 12, dex: 10, con: 12, int: 10, wis: 15, cha: 12 },
+  Ranger:     { str: 12, dex: 14, con: 12, int: 10, wis: 12, cha: 10 },
+  Bardo:      { str: 10, dex: 12, con: 10, int: 12, wis: 10, cha: 15 }
+};
+
+let puntiBonus = 1;
+let puntiRimanenti = 1;
+let statsCorrenti = { str:10,dex:10,con:10,int:10,wis:10,cha:10 };
+
+function aggiornaStats(){
+  document.getElementById("str").innerText = statsCorrenti.str;
+  document.getElementById("dex").innerText = statsCorrenti.dex;
+  document.getElementById("con").innerText = statsCorrenti.con;
+  document.getElementById("int").innerText = statsCorrenti.int;
+  document.getElementById("wis").innerText = statsCorrenti.wis;
+  document.getElementById("cha").innerText = statsCorrenti.cha;
+  document.getElementById("punti").innerText = puntiRimanenti;
+}
+
+function aggiornaClasse(){
+  const classe = document.getElementById("classe").value;
+  const lvl = parseInt(document.getElementById("livello").value) || 1;
+  puntiBonus = lvl;
+  puntiRimanenti = puntiBonus;
+  statsCorrenti = { ...baseStats[classe] };
+  aggiornaStats();
+}
+
+function modStat(stat){
+  if (puntiRimanenti <= 0) return;
+  statsCorrenti[stat]++;
+  puntiRimanenti--;
+  aggiornaStats();
+}
+
+function aggiungiOggetto(){
+  const select = document.getElementById("oggetti");
+  const nome = select.options[select.selectedIndex].text;
+  const index = select.value;
+
+  const div = document.createElement("div");
+  div.className = "item";
+  div.innerHTML = `
+    <a href="/oggetti/${index}" class="item-link" data-index="${index}">${nome}</a>
+    <button type="button" onclick="this.parentElement.remove()">❌</button>
+  `;
+  document.getElementById("inventario").appendChild(div);
+}
+
+function aggiungiSkill(){
+  const nome = document.getElementById("skillNome").value.trim();
+  const desc = document.getElementById("skillDesc").value.trim();
+  const dice = document.getElementById("skillDice").value;
+
+  if(!nome) return;
+
+  const div = document.createElement("div");
+  div.className="skill";
+  div.innerHTML = `
+    <div class="skill-info"><b>${nome}</b><br><small>${desc}</small></div>
+    <div class="skill-dice">🎲 ${dice}</div>
+    <button type="button" onclick="this.parentElement.remove()">❌</button>
+  `;
+  document.getElementById("skills").appendChild(div);
+  document.getElementById("skillNome").value="";
+  document.getElementById("skillDesc").value="";
+}
+
+function serializeForSubmit(){
+  document.getElementById("stats_json").value = JSON.stringify(statsCorrenti);
+  document.getElementById("punti_rimanenti").value = String(puntiRimanenti);
+
+  const inv = Array.from(document.querySelectorAll("#inventario .item-link"))
+    .map(a => a.dataset.index);
+  document.getElementById("inventory_json").value = JSON.stringify(inv);
+
+  const skills = Array.from(document.querySelectorAll("#skills .skill")).map(s => ({
+    nome: s.querySelector(".skill-info b")?.innerText || "",
+    desc: s.querySelector(".skill-info small")?.innerText || "",
+    dice: s.querySelector(".skill-dice")?.innerText || ""
+  }));
+  document.getElementById("skills_json").value = JSON.stringify(skills);
+}
+
+const SERVER_CHAR = {{ c|tojson if c else "null" }};
+
+window.onload = () => {
+  document.getElementById("classe").addEventListener("change", aggiornaClasse);
+  document.getElementById("livello").addEventListener("change", () => {
+    puntiBonus = parseInt(document.getElementById("livello").value) || 1;
+    puntiRimanenti = puntiBonus;
+    aggiornaStats();
+  });
+
+  document.getElementById("sheetForm").addEventListener("submit", () => {
+    serializeForSubmit();
+  });
+
+  if (SERVER_CHAR) {
+    document.getElementById("nome").value = SERVER_CHAR.nome || "";
+    document.getElementById("classe").value = SERVER_CHAR.classe || "Guerriero";
+    document.getElementById("livello").value = SERVER_CHAR.livello || 1;
+    document.getElementById("hp").value = SERVER_CHAR.hp || 10;
+    document.getElementById("hit_dice").value = SERVER_CHAR.hit_dice || 1;
+    document.getElementById("descrizione").value = SERVER_CHAR.descrizione || "";
+    document.getElementById("storia").value = SERVER_CHAR.storia || "";
+
+    statsCorrenti = SERVER_CHAR.stats || statsCorrenti;
+
+    puntiBonus = parseInt(document.getElementById("livello").value) || 1;
+    puntiRimanenti = (SERVER_CHAR.punti_rimanenti !== undefined)
+      ? SERVER_CHAR.punti_rimanenti
+      : puntiBonus;
+
+    aggiornaStats();
+
+    const invBox = document.getElementById("inventario");
+    invBox.innerHTML = "";
+    (SERVER_CHAR.inventario || []).forEach(idx => {
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <a href="/oggetti/${idx}" class="item-link" data-index="${idx}">${idx}</a>
+        <button type="button" onclick="this.parentElement.remove()">❌</button>
+      `;
+      invBox.appendChild(div);
+    });
+
+    const skBox = document.getElementById("skills");
+    skBox.innerHTML = "";
+    (SERVER_CHAR.skills || []).forEach(s => {
+      const div = document.createElement("div");
+      div.className="skill";
+      div.innerHTML = `
+        <div class="skill-info"><b>${s.nome || ""}</b><br><small>${s.desc || ""}</small></div>
+        <div class="skill-dice">${s.dice || ""}</div>
+        <button type="button" onclick="this.parentElement.remove()">❌</button>
+      `;
+      skBox.appendChild(div);
+    });
+
+  } else {
+    aggiornaClasse();
+  }
+};
+</script>
+{% endblock %}

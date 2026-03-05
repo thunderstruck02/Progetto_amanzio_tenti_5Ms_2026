@@ -4,7 +4,7 @@
 
 # Importare tutte le librerie necessarie
 # Flask per il backend della pagina web
-from flask import Flask, render_template, request, abort, url_for
+from flask import Flask, render_template, request, abort, url_for, redirect
 # Requests per compiere richieste all'API
 import requests
 # lru_cache per salvare i dati della sessione in cache ed evitare tempi di attesi ripetuti
@@ -14,6 +14,7 @@ from math import ceil
 # os per creare directory e i JSON file necessari allo storing dei dati
 import os
 import json
+import re
 # ThreadPoolExecutor serve per eseguire operazioni in concorrenza (parallelismo)
 from concurrent.futures import ThreadPoolExecutor, as_completed
 # Datetime per ottenere informazioni sulla data di oggi e altro
@@ -39,7 +40,8 @@ SPELLS_FULL = os.path.join(DATA_DIR, "spells_full.json")
 
 # Se la directory non esiste, la crea (permette di condividere il file, etc.)
 os.makedirs(DATA_DIR, exist_ok=True)
-
+CHAR_DIR = os.path.join(DATA_DIR, "characters")
+os.makedirs(CHAR_DIR, exist_ok=True)
 # inizializzazione della sessione (velocizza le request e permette di conservarle)
 session = requests.Session()
 
@@ -439,6 +441,53 @@ def admin_build_all_json():
         f"time_sec: {delta:.2f}\n"
     )
 
+# -- HELPER PER LA SCHEDA PERSONAGGIO
+def slugify(name: str) -> str:
+    """Crea un id file-safe partendo dal nome."""
+    name = (name or "").strip().lower()
+    name = re.sub(r"\s+", "-", name)
+    name = re.sub(r"[^a-z0-9\-]", "", name)
+    return name or "senza-nome"
+
+def char_path(char_id: str) -> str:
+    return os.path.join(CHAR_DIR, f"{char_id}.json")
+
+def save_character(character: dict) -> str:
+    """Salva su file e ritorna char_id."""
+    char_name = character.get("nome", "")
+    char_id = slugify(char_name)
+    character["id"] = char_id
+    character["updated_at"] = datetime.now().isoformat(timespec="seconds")
+    atomic_write_json(char_path(char_id), character)
+    return char_id
+
+def load_character(char_id: str) -> dict | None:
+    p = char_path(char_id)
+    if not os.path.exists(p):
+        return None
+    with open(p, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def list_characters() -> list[dict]:
+    out = []
+    for fn in os.listdir(CHAR_DIR):
+        if not fn.endswith(".json"):
+            continue
+        char_id = fn[:-5]
+        d = load_character(char_id)
+        if d:
+            out.append(d)
+    # ordina per nome
+    out.sort(key=lambda x: (x.get("nome","").lower(), x.get("updated_at","")))
+    return out
+
+def delete_character(char_id: str) -> bool:
+    p = char_path(char_id)
+    if not os.path.exists(p):
+        return False
+    os.remove(p)
+    return True
+
 # rende la funzione ability_mod utilizzabile nei templates
 app.jinja_env.globals["ability_mod"] = ability_mod
 
@@ -447,6 +496,11 @@ app.jinja_env.globals["ability_mod"] = ability_mod
 @app.route("/")
 def home():
     return render_template("home.html")
+
+@app.route("/scheda")
+def scheda():
+    return render_template("scheda_personaggio.html")
+
 
 
 # ----- MONSTER ROUTES ------
@@ -651,6 +705,107 @@ def new_5e():
 @app.route("/dadi")
 def dadi():
     return render_template("dadi.html")
+
+@app.route("/personaggi")
+def personaggi():
+    chars = list_characters()
+    return render_template("personaggi.html", characters=chars)
+
+
+@app.route("/personaggi/<char_id>")
+def personaggio(char_id):
+    d = load_character(char_id)
+    if not d:
+        abort(404)
+    return render_template("personaggio.html", c=d)
+
+
+@app.route("/personaggi/<char_id>/delete", methods=["POST"])
+def personaggio_delete(char_id):
+    delete_character(char_id)
+    return redirect(url_for("personaggi"))
+
+
+@app.route("/scheda", methods=["GET", "POST"])
+def scheda_personaggio():
+    # choices per inventario (dal JSON locale)
+    eq = load_json_dict(EQUIPMENT_FULL)
+    if not eq:
+        return render_template("index_missing.html", title="Scheda Personaggio (Oggetti)", admin_url="/admin/build_equipment_json")
+
+    equipment_choices = sorted(
+        [(v.get("index"), v.get("name")) for v in eq.values() if v.get("index") and v.get("name")],
+        key=lambda x: x[1].lower()
+    )
+
+    if request.method == "GET":
+        char_id = request.args.get("id", "", type=str).strip()
+        c = load_character(char_id) if char_id else None
+        return render_template("scheda_personaggio.html", equipment_choices=equipment_choices, c=c)
+
+    # POST: salva
+    nome = request.form.get("nome", "").strip()
+    if not nome:
+        abort(400, "Nome personaggio obbligatorio")
+
+    # campi “semplici”
+    classe = request.form.get("classe", "Guerriero")
+    livello = int(request.form.get("livello", "1") or 1)
+    hp = int(request.form.get("hp", "10") or 10)
+    hit_dice = int(request.form.get("hit_dice", "1") or 1)
+    descrizione = request.form.get("descrizione", "")
+    storia = request.form.get("storia", "")
+
+    # campi JSON serializzati dal JS (hidden inputs)
+    stats_json = request.form.get("stats_json", "{}")
+    inv_json = request.form.get("inventory_json", "[]")
+    skills_json = request.form.get("skills_json", "[]")
+    punti_rimanenti = int(request.form.get("punti_rimanenti", "0") or 0)
+
+    try:
+        stats = json.loads(stats_json)
+        inventario = json.loads(inv_json)
+        skills = json.loads(skills_json)
+    except Exception:
+        abort(400, "Dati JSON non validi (stats/inventario/skills)")
+
+    character = {
+        "nome": nome,
+        "classe": classe,
+        "livello": livello,
+        "hp": hp,
+        "hit_dice": hit_dice,
+        "descrizione": descrizione,
+        "storia": storia,
+        "stats": stats,
+        "punti_rimanenti": punti_rimanenti,
+        "inventario": inventario,  # lista di index equipment
+        "skills": skills,          # lista di dict
+    }
+
+    char_id = request.form.get("char_id", "").strip()
+
+    character = {
+        "nome": nome,
+        "classe": classe,
+        "livello": livello,
+        "hp": hp,
+        "hit_dice": hit_dice,
+        "descrizione": descrizione,
+        "storia": storia,
+        "stats": stats,
+        "punti_rimanenti": punti_rimanenti,
+        "inventario": inventario,
+        "skills": skills,
+    }
+
+    if char_id:
+        character["id"] = char_id
+        atomic_write_json(char_path(char_id), character)
+    else:
+        char_id = save_character(character)
+
+    return redirect(url_for("personaggio", char_id=char_id))
 
 if __name__ == "__main__":
     app.run(debug=True)
