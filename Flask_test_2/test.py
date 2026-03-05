@@ -1,17 +1,32 @@
+# DND Player's helping wand, di Tenti Filippo e Amanzio Riccardo
+#   una pagina web con informazioni basilari su DND 5E,
+#   tipologie di equipaggiamento, nemici e incantesimi disponibili, con un lanciadadi incluso
+
+# Importare tutte le librerie necessarie
+# Flask per il backend della pagina web
 from flask import Flask, render_template, request, abort, url_for
+# Requests per compiere richieste all'API
 import requests
+# lru_cache per salvare i dati della sessione in cache ed evitare tempi di attesi ripetuti
 from functools import lru_cache
+# ceil per arrotondare per eccesso (usato nel calcolo delle pagine)
 from math import ceil
+# os per creare directory e i JSON file necessari allo storing dei dati
 import os
 import json
+# ThreadPoolExecutor serve per eseguire operazioni in concorrenza (parallelismo)
 from concurrent.futures import ThreadPoolExecutor, as_completed
+# Datetime per ottenere informazioni sulla data di oggi e altro
 from datetime import datetime
 
+# Inizializzazione della pagina flask
 app = Flask(__name__)
 
+# Definizione dell'API DND 5E
 API_BASE = "https://www.dnd5eapi.co"
 API_V1 = f"{API_BASE}/api/2014"
 
+# Directory per i file JSON salvati
 DATA_DIR = "data"
 # --- File di index utilizzati per velocizzare l'uso dei filtri
 SPELL_INDEX_FILE = os.path.join(DATA_DIR,"/indexes/spells_index.json")
@@ -36,19 +51,26 @@ def atomic_write_json(path: str, obj):
         json.dump(obj, f, ensure_ascii=False)
     os.replace(tmp, path)
 
+# lru_cache è un DECORATORE (modifica una funzione senza alterarne il codice interno)
+# serve a memorizzare le informazioni sulla cache del browser (massimo 8 salvataggi)
+# load_json_dict carica il JSON dictionary selezionato e lo salva nella RAM (caching)
 @lru_cache(maxsize=8)
 def load_json_dict(path: str) -> dict:
     """Carica JSON (dict) e lo cachea in RAM."""
     if not os.path.exists(path):
         return {}
     with open(path, "r", encoding="utf-8") as f:
+        #load trasforma il json in un oggetto python
         return json.load(f)
 
+# siccome la cache salva l'ultimo dato memorizzato, se il JSON cambia è necessario ripulirla
 def reload_json(path: str):
     """Invalida cache per ricaricare file aggiornato."""
     load_json_dict.cache_clear()
 
 # ---------- Helpers ----------
+# api_get è la funzione che costruire l'url per eseguire la request all'API, per poi creare la sessione (r)
+# session è preferito in quanto riutilizza la connessione HTTP piuttosto che realizzarne una nuova
 def api_get(path: str):
     """GET JSON from dnd5eapi with basic error handling."""
     url = f"{API_BASE}{path}" if path.startswith("/api/") else f"{API_V1}/{path.lstrip('/')}"
@@ -59,6 +81,7 @@ def api_get(path: str):
 
 # --- EQUIPMENT (cache and helpers) ---
 
+# funzione per ottenere la lista dell'equipaggiamento (da mettere sulla pagina)
 @lru_cache(maxsize=64)
 def get_equipment_list():
     """Lista base equip: [{index, name, url}, ...]"""
@@ -67,10 +90,15 @@ def get_equipment_list():
         return []
     return data["results"]
 
+# funzione più pesante, prende tutti i dati degli eventuali oggetti
+# per questo motivo richiede più spazio sulla cache
 @lru_cache(maxsize=4096)
 def get_equipment_detail(index: str):
     return api_get(f"/api/2014/equipment/{index}")
 
+# funzione per costruire un indice per filtrare gli oggetti
+# fondamentale per ridurre i tempi di caricamento del filtering
+#   la funzione è stata realizzata prima della creazione dei data JSON, quindi potrebbe risultare ora superflua
 def build_equipment_index():
     """Indice leggero per filtri oggetti: category/cost/weight + name."""
     base_list = get_equipment_list()
@@ -102,7 +130,7 @@ def build_equipment_index():
 
     return index_data
 
-
+# carica l'indice dell'equipaggiamento (per eventuali filtri)
 @lru_cache(maxsize=1)
 def load_equipment_index():
     if not os.path.exists(EQUIP_INDEX_FILE):
@@ -110,13 +138,14 @@ def load_equipment_index():
     with open(EQUIP_INDEX_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
-
+# FUNZIONE ADMIN PER RICOSTRUIRE L'INDICE MANUALMENTE
 @app.route("/admin/rebuild_equipment_index")
 def rebuild_equipment_index():
     data = build_equipment_index()
     load_equipment_index.cache_clear()
     return f"Equipment index rebuilt: {len(data)} items"
 
+# divisione degli oggetti in base al costo
 def cost_bucket(cost):
     """Ritorna 'low'/'medium'/'high' o None."""
     if not cost or "quantity" not in cost:
@@ -130,6 +159,7 @@ def cost_bucket(cost):
         return "high"
     return None
 
+# divisione degli oggetti in base al peso
 def weight_bucket(weight):
     """Ritorna 'light'/'heavy' o None."""
     if weight is None:
@@ -140,7 +170,7 @@ def weight_bucket(weight):
         return "heavy"
     return None
 
-# Costruire il filer JSON per gli oggetti/equipaggiamento
+# Costruire il file JSON per gli oggetti/equipaggiamento
 def build_equipment_full():
     base = get_equipment_list()
     indices = [it["index"] for it in base]
@@ -162,6 +192,7 @@ def build_equipment_full():
     atomic_write_json(EQUIPMENT_FULL, out)
     return len(out)
 
+# FUNZIONE ADMIN PER COSTRUIRE IL FILE EQUIPAGGIAMENTO
 @app.route("/admin/build_equipment_json")
 def admin_build_equipment_json():
     n = build_equipment_full()
@@ -170,10 +201,12 @@ def admin_build_equipment_json():
 
 # --- MONSTERS (cache and helpers) ---
 
+# prende i dettagli sui mostri (salvati in cache)
 @lru_cache(maxsize=2048)
 def get_monster_detail(index: str):
     return api_get(f"/api/2014/monsters/{index}")
 
+# prende la lista sui mostri (uguale al processo degli oggetti)
 @lru_cache(maxsize=64)
 def get_monsters_list():
     """Returns base list: [{index,name,url}, ...]"""
@@ -182,6 +215,7 @@ def get_monsters_list():
         return []
     return data["results"]
 
+# costruzione dell'indice mostri
 def build_monster_index():
     """Indice leggero per filtri mostri: type/size/cr + name."""
     base_list = get_monsters_list()
@@ -211,7 +245,7 @@ def build_monster_index():
 
     return index_data
 
-
+# caricare l'indice dei mostri
 @lru_cache(maxsize=1)
 def load_monster_index():
     """Carica indice da file. Se non esiste, ritorna {} (build manuale)."""
@@ -220,17 +254,18 @@ def load_monster_index():
     with open(MONSTER_INDEX_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
-
+# FUNZIONE ADMIN PER RICOSTRUIRE L'INDICE MOSTRI
 @app.route("/admin/rebuild_monsters_index")
 def rebuild_monsters_index():
     data = build_monster_index()
     load_monster_index.cache_clear()
     return f"Monster index rebuilt: {len(data)} monsters"
 
-
+# funzione basilare per il calcolo del bonus derivato dal punteggio totale delle abilità
 def ability_mod(score: int) -> int:
     return (score - 10) // 2
 
+# parse_cr è usata per analizzare i cr e renderli leggibili al codice (rimuovendo eventuali / e altro)
 def parse_cr(value: str):
     """CR can be int-like ('10') or fraction ('1/4'). Return a comparable float."""
     if not value:
@@ -269,6 +304,7 @@ def build_monsters_full():
     atomic_write_json(MONSTERS_FULL, out)
     return len(out)
 
+# FUNZIONE MANUALE PER COSTRUIRE IL FILE JSON PER I MOSTRI
 @app.route("/admin/build_monsters_json")
 def admin_build_monsters_json():
     n = build_monsters_full()
@@ -277,6 +313,7 @@ def admin_build_monsters_json():
 
 # -------- SPELLS (cache and helpers) --------
 
+# creare la lista di incantesimi
 @lru_cache(maxsize=64)
 def get_spells_list():
     """Lista base spells: [{index,name,url}, ...]"""
@@ -285,12 +322,12 @@ def get_spells_list():
         return []
     return data["results"]
 
+# ottenere i dettagli sugli incantesimi
 @lru_cache(maxsize=4096)
 def get_spell_detail(index: str):
     return api_get(f"/api/2014/spells/{index}")
 
-    # ....SPELL_INDEX (per facilitare la ricerca)....
-
+# ....SPELL_INDEX (per facilitare la ricerca)....
 def build_spell_index():
     """Crea (o ricrea) un indice locale dei campi necessari ai filtri."""
     base_list = get_spells_list()
@@ -298,7 +335,7 @@ def build_spell_index():
 
     index_data = {}
 
-    # Parallelismo per velocizzare il primo build (senza esagerare)
+    # Parallelismo per velocizzare il primo build
     workers = 12
     with ThreadPoolExecutor(max_workers=workers) as ex:
         futs = {ex.submit(get_spell_detail, idx): idx for idx in indices}
@@ -323,6 +360,7 @@ def build_spell_index():
 
     return index_data
 
+# carica l'indice degli incantesimi
 @lru_cache(maxsize=1)
 def load_spell_index():
     """Carica indice da file. Se non esiste, lo crea."""
@@ -331,6 +369,7 @@ def load_spell_index():
     with open(SPELL_INDEX_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
+# FUNZIONE ADMIN PER RICOSTRUIRE L'INDICE INCANTESIMI
 @app.route("/admin/rebuild_spells_index")
 def rebuild_spells_index():
     # ricrea indice e invalida cache del loader
@@ -339,7 +378,8 @@ def rebuild_spells_index():
     return f"Spell index rebuilt: {len(data)} spells"
 
 
-
+# normalize è usato per trasformare la lista di componenti per incantesimi
+# in un SET di elementi unici e non ordinati
 def normalize_components(components):
     """components è una lista tipo ['V','S','M']"""
     if not components:
@@ -366,6 +406,7 @@ def build_spells_full():
     atomic_write_json(SPELLS_FULL, out)
     return len(out)
 
+# FUNZIONE ADMIN PER COSTRUIRE IL JSON INCANTESIMI
 @app.route("/admin/build_spells_json")
 def admin_build_spells_json():
     n = build_spells_full()
@@ -398,7 +439,7 @@ def admin_build_all_json():
         f"time_sec: {delta:.2f}\n"
     )
 
-# Make helper available in templates
+# rende la funzione ability_mod utilizzabile nei templates
 app.jinja_env.globals["ability_mod"] = ability_mod
 
 
