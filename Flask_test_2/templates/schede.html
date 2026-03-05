@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Schede Personaggio — D&D 5e{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='schede.css') }}">
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">🧾 Schede D&D personali</h1>
+<p class="muted">Crea, salva e gestisci le tue schede personaggio sul database JSON del server.</p>
+
+{% if message %}
+  <div class="info-box">{{ message }}</div>
+{% endif %}
+
+{% if missing_data %}
+  <div class="error">Servono i database locali di incantesimi e oggetti. Esegui prima i comandi admin build.</div>
+{% endif %}
+
+<section class="sheet-layout">
+  <article class="card create-card">
+    <h2>Crea una nuova scheda</h2>
+    <form method="post" action="{{ url_for('crea_scheda') }}" class="sheet-form">
+      <label>Nome personaggio
+        <input type="text" name="name" required placeholder="Es: Eldrin Stormcaller">
+      </label>
+
+      <label>Classe
+        <input type="text" name="class" required placeholder="Es: Mago">
+      </label>
+
+      <label>Livello
+        <input type="number" name="level" min="1" max="20" value="1">
+      </label>
+
+      <label>Background
+        <input type="text" name="background" placeholder="Es: Saggio di Candlekeep">
+      </label>
+
+      <label>Note
+        <textarea name="notes" rows="3" placeholder="Tratti distintivi, obiettivi, legami..."></textarea>
+      </label>
+
+      <label>Incantesimi (selezione multipla)
+        <select name="spells" multiple size="10">
+          {% for sp in spells %}
+            <option value="{{ sp.index }}">{{ sp.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label>Oggetti (selezione multipla)
+        <select name="items" multiple size="10">
+          {% for eq in equipment %}
+            <option value="{{ eq.index }}">{{ eq.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <button type="submit">Salva scheda</button>
+    </form>
+  </article>
+
+  <article class="card list-card">
+    <h2>Schede salvate ({{ sheets|length }})</h2>
+
+    {% if not sheets %}
+      <p class="muted">Nessuna scheda creata per ora.</p>
+    {% endif %}
+
+    {% for sheet in sheets %}
+      <div class="saved-sheet">
+        <div class="saved-head">
+          <h3>{{ sheet.name }} <span class="muted">— {{ sheet.class }} Lv. {{ sheet.level }}</span></h3>
+          <form method="post" action="{{ url_for('elimina_scheda', sheet_id=sheet.id) }}">
+            <button type="submit">Elimina</button>
+          </form>
+        </div>
+
+        <p class="muted">Creata il {{ sheet.created_at }}{% if sheet.background %} • {{ sheet.background }}{% endif %}</p>
+        {% if sheet.notes %}<p>{{ sheet.notes }}</p>{% endif %}
+
+        <div class="links-block">
+          <strong>Incantesimi</strong>
+          <div class="tags">
+            {% if sheet.spell_entries %}
+              {% for sp in sheet.spell_entries %}
+                <a class="tag" href="{{ url_for('incantesimo', index=sp.index) }}" title="Vai alla scheda incantesimo">🪄 {{ sp.name }}</a>
+              {% endfor %}
+            {% else %}
+              <span class="muted">Nessun incantesimo</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="links-block">
+          <strong>Oggetti</strong>
+          <div class="tags">
+            {% if sheet.item_entries %}
+              {% for it in sheet.item_entries %}
+                <a class="tag" href="{{ url_for('oggetto', index=it.index) }}" title="Vai alla scheda oggetto">🗡️ {{ it.name }}</a>
+              {% endfor %}
+            {% else %}
+              <span class="muted">Nessun oggetto</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </article>
+</section>
+{% endblock %}
