@@ -1,0 +1,1 @@
+{"nome": "Damiano", "classe": "Guerriero", "livello": 1, "hp": 10, "hit_dice": 1, "descrizione": "", "storia": "", "stats": {"str": 15, "dex": 12, "con": 14, "int": 8, "wis": 10, "cha": 10}, "punti_rimanenti": 1, "inventario": [], "skills": [], "id": "damiano", "updated_at": "2026-03-05T23:25:31"}
