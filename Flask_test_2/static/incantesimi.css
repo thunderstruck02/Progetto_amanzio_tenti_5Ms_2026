@@ -1,7 +1,57 @@
 /* ===============================
    TEMA MAGICO / ARCANO
 ================================ */
+/* ===============================
+   SFERE MAGICHE DI SFONDO
+================================ */
 
+body::before,
+body::after{
+  content:"";
+  position:fixed;
+  width:600px;
+  height:600px;
+  border-radius:50%;
+  pointer-events:none;
+  filter: blur(120px);
+  opacity:.35;
+  z-index:-1;
+  animation: floatOrb 18s ease-in-out infinite;
+}
+
+/* Orb viola */
+body::before{
+  background: radial-gradient(circle,
+      rgba(168,85,247,.65) 0%,
+      rgba(168,85,247,.35) 30%,
+      transparent 70%);
+  top:-150px;
+  left:-120px;
+}
+
+/* Orb blu */
+body::after{
+  background: radial-gradient(circle,
+      rgba(59,130,246,.65) 0%,
+      rgba(59,130,246,.35) 30%,
+      transparent 70%);
+  bottom:-200px;
+  right:-150px;
+  animation-delay:6s;
+}
+
+/* movimento lento */
+@keyframes floatOrb{
+  0%{
+    transform: translate(0px,0px) scale(1);
+  }
+  50%{
+    transform: translate(80px,40px) scale(1.15);
+  }
+  100%{
+    transform: translate(0px,0px) scale(1);
+  }
+}
 body{
   background:
     radial-gradient(1200px 700px at 20% -10%, rgba(168, 85, 247, .35) 0%, transparent 55%),

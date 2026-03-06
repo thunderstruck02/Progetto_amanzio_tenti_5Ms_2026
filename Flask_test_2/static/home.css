@@ -6,34 +6,33 @@ body {
     text-align: center;
 }
 
-/* Barra dei bottoni */
-.navbar {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    padding: 20px;
-    background-color: #0d0d0d;
-    box-shadow: 0 0 15px black;
+/* ========== NAVBAR (riusa i tuoi bottoni) ========== */
+.navbar{
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  padding:18px;
+  background: rgba(13,13,13,.9);
+  border-bottom: 1px solid rgba(35,48,71,.65);
+  box-shadow: 0 0 15px rgba(0,0,0,.6);
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  flex-wrap: wrap;
 }
 
-.nav-button {
-    padding: 12px 25px;
-    font-size: 16px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    background: linear-gradient(145deg, #990000, #660000);
-    color: white;
-    font-weight: bold;
-    transition: 0.3s ease;
-    box-shadow: 0 4px 10px black;
+.nav-button{
+  padding: 12px 22px;
+  font-size: 15px;
+  border: 1px solid rgba(35,48,71,.65);
+  border-radius: 12px;
+  cursor: pointer;
+  background: rgba(125,211,252,.10);
+  color: var(--text);
+  font-weight: 800;
+  transition: 0.2s ease;
+  box-shadow: 0 6px 14px rgba(0,0,0,.55);
 }
-
-.nav-button:hover {
-    background: linear-gradient(145deg, #cc0000, #800000);
-    transform: scale(1.05);
-}
-
 /* Titolo */
 .title {
     margin-top: 40px;

@@ -1,7 +1,56 @@
 /* ===============================
    TEMA GRIMORIO ORO / VIOLA
 ================================ */
+/* ===============================
+   SFERE MAGICHE DI SFONDO
+================================ */
 
+body::before,
+body::after{
+  content: "";
+  position: fixed;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(120px);
+  opacity: 0.7;
+  z-index: -1;
+  animation: orbFloat 18s ease-in-out infinite;
+}
+
+/* Sfera viola */
+body::before{
+  top: -120px;
+  left: -100px;
+  background: radial-gradient(circle,
+    rgba(168, 85, 247, 0.55) 0%,
+    rgba(168, 85, 247, 0.22) 35%,
+    transparent 70%);
+}
+
+/* Sfera dorata */
+body::after{
+  bottom: -120px;
+  right: -120px;
+  background: radial-gradient(circle,
+    rgba(255, 215, 0, 0.45) 0%,
+    rgba(255, 215, 0, 0.18) 35%,
+    transparent 70%);
+  animation-delay: 7s;
+}
+
+@keyframes orbFloat{
+  0%{
+    transform: translate(0, 0) scale(1);
+  }
+  50%{
+    transform: translate(60px, 35px) scale(1.12);
+  }
+  100%{
+    transform: translate(0, 0) scale(1);
+  }
+}
 body {
   font-family: 'Cinzel', serif;
   background: radial-gradient(circle at top, #1f1c2c, #0f0c29);

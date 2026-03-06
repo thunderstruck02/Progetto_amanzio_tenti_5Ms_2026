@@ -497,11 +497,6 @@ app.jinja_env.globals["ability_mod"] = ability_mod
 def home():
     return render_template("home.html")
 
-@app.route("/scheda")
-def scheda():
-    return render_template("scheda_personaggio.html")
-
-
 
 # ----- MONSTER ROUTES ------
 @app.route("/mostri")
@@ -726,7 +721,7 @@ def personaggio_delete(char_id):
     return redirect(url_for("personaggi"))
 
 
-@app.route("/scheda", methods=["GET", "POST"])
+@app.route("/scheda_personaggio", methods=["GET", "POST"])
 def scheda_personaggio():
     # choices per inventario (dal JSON locale)
     eq = load_json_dict(EQUIPMENT_FULL)
